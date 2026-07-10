@@ -967,7 +967,7 @@ Priority scoring rules:
 
 Make the data feel realistic for San José's actual business landscape. Include some Spanish business names. Make the insights sharp and specific — reference the actual numbers in the insight.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1101,7 +1101,7 @@ async function showPitch(idx) {
   document.getElementById('pitchModal').classList.add('open');
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1297,7 +1297,7 @@ async function lookupBusiness() {
   document.getElementById('lrInsight').innerHTML = '<em style="color:var(--muted)">Analyzing...</em>';
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1390,7 +1390,7 @@ async function lookupGetPitch() {
 
   try {
     const biz = lookupBizData;
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
