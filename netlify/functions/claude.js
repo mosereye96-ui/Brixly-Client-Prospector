@@ -1,7 +1,6 @@
 const https = require('https');
 
 exports.handler = async function(event, context) {
-  // Extend timeout
   context.callbackWaitsForEmptyEventLoop = false;
 
   if (event.httpMethod === 'OPTIONS') {
@@ -27,10 +26,8 @@ exports.handler = async function(event, context) {
 
   try {
     const parsed = JSON.parse(event.body);
-
-    // Force faster model and lower tokens to avoid timeout
     parsed.model = 'claude-haiku-4-5-20251001';
-    parsed.max_tokens = 2000;
+    parsed.max_tokens = 4096;
 
     const result = await new Promise((resolve, reject) => {
       const postData = JSON.stringify(parsed);
