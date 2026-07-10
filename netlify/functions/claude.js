@@ -1,6 +1,9 @@
 const https = require('https');
 
 exports.handler = async function(event, context) {
+  // Extend timeout
+  context.callbackWaitsForEmptyEventLoop = false;
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -23,8 +26,11 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    const body = event.body;
-    const parsed = JSON.parse(body);
+    const parsed = JSON.parse(event.body);
+
+    // Force faster model and lower tokens to avoid timeout
+    parsed.model = 'claude-haiku-4-5-20251001';
+    parsed.max_tokens = 2000;
 
     const result = await new Promise((resolve, reject) => {
       const postData = JSON.stringify(parsed);
@@ -47,6 +53,10 @@ exports.handler = async function(event, context) {
       });
 
       req.on('error', reject);
+      req.setTimeout(25000, () => {
+        req.destroy();
+        reject(new Error('Request timeout'));
+      });
       req.write(postData);
       req.end();
     });
