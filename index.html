@@ -992,7 +992,7 @@ Make the data feel realistic for San José's actual business landscape. Include 
     clearInterval(stepInterval);
     console.error(err);
     document.getElementById('loadingState').classList.remove('show');
-    document.getElementById('resultsContainer').innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">Something went wrong. Check your connection and try again.</div>`;
+    document.getElementById('resultsContainer').innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);font-size:13px;white-space:pre-wrap;">ERROR: ${err.message}\n\n${err.stack || ''}</div>`;
   }
 
   btn.disabled = false;
