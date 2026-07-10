@@ -41,6 +41,8 @@
     top: 0;
     z-index: 100;
     backdrop-filter: blur(12px);
+    flex-wrap: wrap;
+    gap: 12px;
   }
   .logo {
     font-family: 'Georgia', serif;
@@ -57,8 +59,32 @@
     margin-top: 2px;
   }
 
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--surface2);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border2);
+  }
+  .nav-tab {
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .nav-tab:hover { color: var(--ink); }
+  .nav-tab.active { background: var(--accent); color: white; }
+
   /* MAIN */
   main { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  .view { display: none; }
+  .view.active { display: block; }
 
   /* SEARCH PANEL */
   .search-panel {
@@ -133,8 +159,10 @@
   .cat-chip:hover { border-color: var(--accent); color: var(--ink); }
   .cat-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
 
+  .btn-row { display: flex; gap: 10px; }
+
   .search-btn {
-    width: 100%;
+    flex: 1;
     background: var(--accent);
     color: white;
     padding: 14px;
@@ -151,6 +179,20 @@
   }
   .search-btn:hover:not(:disabled) { background: var(--accent-light); }
   .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .add-btn {
+    background: var(--surface2);
+    color: var(--ink);
+    border: 1px solid var(--border2);
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    white-space: nowrap;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* STATS BAR */
   .stats-bar {
@@ -272,7 +314,7 @@
   .btn-done { background: rgba(82,183,136,0.15); color: var(--green); border: 1px solid rgba(82,183,136,0.25); }
   .btn-skip { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); }
 
-  /* PITCH MODAL */
+  /* MODAL (shared: pitch + add business) */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -291,7 +333,7 @@
     padding: 28px;
     max-width: 560px;
     width: 100%;
-    max-height: 80vh;
+    max-height: 85vh;
     overflow-y: auto;
   }
   .modal-title { font-family: 'Georgia', serif; font-size: 20px; margin-bottom: 6px; }
@@ -317,7 +359,7 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .modal-copy {
+  .modal-copy, .modal-submit {
     background: var(--accent);
     color: white;
     border: none;
@@ -327,6 +369,40 @@
     font-weight: 600;
     cursor: pointer;
   }
+
+  /* ADD BUSINESS FORM */
+  .form-row { display: flex; gap: 12px; margin-bottom: 14px; }
+  .form-group { flex: 1; }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--ink);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .checkbox-row input { width: auto; }
 
   /* LOADING */
   .loading-state {
@@ -378,7 +454,148 @@
   .tc.closed { color: var(--green); }
   .tc.skipped { color: var(--muted); }
 
+  /* HISTORY VIEW */
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .history-title { font-size: 20px; font-family: 'Georgia', serif; }
+  .clear-history-btn {
+    background: var(--surface2);
+    color: var(--red);
+    border: 1px solid var(--border2);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .clear-history-btn:hover { border-color: var(--red); }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .history-item.closed { border-left: 3px solid var(--green); }
+  .history-item.skipped { border-left: 3px solid var(--border2); }
+  .hist-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .hist-meta { font-size: 12px; color: var(--muted); }
+  .hist-status {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+  .hist-status.closed { background: rgba(82,183,136,0.15); color: var(--green); }
+  .hist-status.skipped { background: rgba(120,120,120,0.15); color: var(--muted); }
+  .hist-date { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
   .hidden { display: none !important; }
+
+  /* LOOKUP PANEL */
+  .lookup-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 32px;
+  }
+  .lookup-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .lookup-row .input-group { flex: 1; margin-bottom: 0; }
+  .lookup-btn {
+    background: var(--surface2);
+    color: var(--ink);
+    border: 1px solid var(--border2);
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.2s;
+    flex-shrink: 0;
+  }
+  .lookup-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .lookup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* LOOKUP RESULT CARD */
+  .lookup-result {
+    margin-top: 18px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 20px;
+    display: none;
+  }
+  .lookup-result.show { display: block; }
+  .lookup-result.hot { border-left: 3px solid var(--accent); }
+  .lookup-result.warm { border-left: 3px solid var(--gold); }
+  .lookup-result.cold { border-left: 3px solid var(--border2); }
+
+  .lookup-score-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .lookup-biz-name { font-size: 18px; font-weight: 700; }
+  .lookup-score {
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .lookup-score.hot { color: var(--accent); }
+  .lookup-score.warm { color: var(--gold); }
+  .lookup-score.cold { color: var(--muted); }
+  .score-label { font-size: 11px; color: var(--muted); text-align: right; text-transform: uppercase; letter-spacing: 0.07em; }
+
+  .lookup-breakdown {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .breakdown-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .breakdown-pill .bp-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px; }
+  .breakdown-pill .bp-val { font-weight: 700; color: var(--ink); }
+
+  .lookup-insight {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .lookup-insight strong { color: var(--accent); }
+
+  .lookup-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -388,112 +605,173 @@
     <div class="logo">Brix<span>ly</span></div>
     <div class="logo-sub">Client Prospector</div>
   </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-view="prospectorView" onclick="switchView('prospectorView', this)">🔍 Prospector</div>
+    <div class="nav-tab" data-view="historyView" onclick="switchView('historyView', this)">📜 History</div>
+  </div>
   <div style="font-size:12px;color:var(--muted);">San José, CA</div>
 </header>
 
 <main>
 
-  <!-- SEARCH PANEL -->
-  <div class="search-panel">
-    <div class="panel-title">Find Target Businesses</div>
+  <!-- ===================== PROSPECTOR VIEW ===================== -->
+  <div class="view active" id="prospectorView">
 
-    <div class="search-row">
-      <div class="input-group">
-        <label>ZIP Code</label>
-        <input type="text" id="zipInput" placeholder="95117" maxlength="5" value="95117">
+    <!-- LOOKUP PANEL -->
+    <div class="lookup-panel">
+      <div class="panel-title">Look Up a Specific Business</div>
+      <div class="lookup-row">
+        <div class="input-group">
+          <label>Business Name</label>
+          <input type="text" id="lookupInput" placeholder="e.g. El Toro Taqueria, San José CA" onkeydown="if(event.key==='Enter') lookupBusiness()">
+        </div>
+        <button class="lookup-btn" id="lookupBtn" onclick="lookupBusiness()">🔎 Rate It</button>
       </div>
-      <div class="input-group">
-        <label>Radius</label>
-        <select id="radiusInput">
-          <option value="1">1 mile</option>
-          <option value="2" selected>2 miles</option>
-          <option value="5">5 miles</option>
-          <option value="10">10 miles</option>
-        </select>
+
+      <!-- LOOKUP RESULT -->
+      <div class="lookup-result" id="lookupResult">
+        <div class="lookup-score-row">
+          <div>
+            <div class="lookup-biz-name" id="lrName"></div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px;" id="lrType"></div>
+          </div>
+          <div style="text-align:right;">
+            <div class="lookup-score" id="lrScore"></div>
+            <div class="score-label">Opportunity Score</div>
+            <div class="priority-badge" id="lrBadge" style="margin-top:4px;display:inline-block;"></div>
+          </div>
+        </div>
+        <div class="lookup-breakdown" id="lrBreakdown"></div>
+        <div class="lookup-insight" id="lrInsight"></div>
+        <div class="lookup-actions">
+          <button class="action-btn btn-pitch" onclick="lookupGetPitch()">📋 Get Pitch Script</button>
+          <button class="action-btn btn-maps" id="lrMapsBtn">🗺️ Maps</button>
+          <button class="action-btn btn-done" onclick="lookupMarkClosed()">✅ Mark Closed</button>
+          <button class="action-btn btn-skip" onclick="lookupMarkSkipped()">⏭ Skip</button>
+        </div>
       </div>
-      <div class="input-group">
-        <label>Language</label>
-        <select id="langInput">
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="both" selected>Both</option>
-        </select>
+    </div>
+
+    <!-- SEARCH PANEL -->
+    <div class="search-panel">
+      <div class="panel-title">Find Target Businesses</div>
+
+      <div class="search-row">
+        <div class="input-group">
+          <label>ZIP Code</label>
+          <input type="text" id="zipInput" placeholder="95117" maxlength="5" value="95117">
+        </div>
+        <div class="input-group">
+          <label>Radius</label>
+          <select id="radiusInput">
+            <option value="1">1 mile</option>
+            <option value="2" selected>2 miles</option>
+            <option value="5">5 miles</option>
+            <option value="10">10 miles</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Language</label>
+          <select id="langInput">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="both" selected>Both</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;">Business Type</div>
+      <div class="category-grid" id="categoryGrid">
+        <div class="cat-chip active" data-cat="restaurant">🌮 Restaurants</div>
+        <div class="cat-chip active" data-cat="salon">✂️ Salons</div>
+        <div class="cat-chip active" data-cat="barbershop">💈 Barbershops</div>
+        <div class="cat-chip active" data-cat="auto">🔧 Auto Shops</div>
+        <div class="cat-chip" data-cat="spa">💆 Spas</div>
+        <div class="cat-chip" data-cat="dental">🦷 Dental</div>
+        <div class="cat-chip" data-cat="gym">💪 Gyms</div>
+        <div class="cat-chip" data-cat="cleaning">🧹 Cleaning</div>
+        <div class="cat-chip" data-cat="cafe">☕ Cafes</div>
+        <div class="cat-chip" data-cat="retail">🛍️ Retail</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="search-btn" id="searchBtn" onclick="runSearch()">
+          <span>🔍</span> Find Target Businesses
+        </button>
+        <button class="add-btn" onclick="openAddBusiness()">➕ Add Business</button>
       </div>
     </div>
 
-    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;">Business Type</div>
-    <div class="category-grid" id="categoryGrid">
-      <div class="cat-chip active" data-cat="restaurant">🌮 Restaurants</div>
-      <div class="cat-chip active" data-cat="salon">✂️ Salons</div>
-      <div class="cat-chip active" data-cat="barbershop">💈 Barbershops</div>
-      <div class="cat-chip active" data-cat="auto">🔧 Auto Shops</div>
-      <div class="cat-chip" data-cat="spa">💆 Spas</div>
-      <div class="cat-chip" data-cat="dental">🦷 Dental</div>
-      <div class="cat-chip" data-cat="gym">💪 Gyms</div>
-      <div class="cat-chip" data-cat="cleaning">🧹 Cleaning</div>
-      <div class="cat-chip" data-cat="cafe">☕ Cafes</div>
-      <div class="cat-chip" data-cat="retail">🛍️ Retail</div>
+    <!-- LOADING -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <div class="loading-text">Scanning businesses in your area...</div>
+      <div class="loading-steps" id="loadingSteps">Analyzing review counts and ratings...</div>
     </div>
 
-    <button class="search-btn" id="searchBtn" onclick="runSearch()">
-      <span>🔍</span> Find Target Businesses
-    </button>
+    <!-- STATS BAR -->
+    <div class="stats-bar hidden" id="statsBar">
+      <div class="stat-pill">
+        <span class="num" id="statTotal">0</span>
+        <span class="lbl">Businesses found</span>
+      </div>
+      <div class="stat-pill">
+        <span class="num" id="statHot" style="color:var(--accent)">0</span>
+        <span class="lbl">🔥 Hot targets</span>
+      </div>
+      <div class="stat-pill">
+        <span class="num" id="statWarm" style="color:var(--gold)">0</span>
+        <span class="lbl">⚡ Warm leads</span>
+      </div>
+      <div class="stat-pill">
+        <span class="num" id="statClosed" style="color:var(--green)">0</span>
+        <span class="lbl">✅ Closed</span>
+      </div>
+    </div>
+
+    <!-- TRACKER -->
+    <div class="tracker-bar hidden" id="trackerBar">
+      <span class="tracker-label">Your progress today</span>
+      <div class="tracker-counts">
+        <span class="tc visited">👣 <span id="tcVisited">0</span> visited</span>
+        <span class="tc closed">✅ <span id="tcClosed">0</span> closed</span>
+        <span class="tc skipped">⏭ <span id="tcSkipped">0</span> skipped</span>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="resultsHeader" class="results-header hidden">
+      <div class="results-title">Showing <span id="resultCount">0</span> businesses — sorted by opportunity</div>
+      <select class="sort-select" onchange="sortResults(this.value)">
+        <option value="priority">Sort: Priority</option>
+        <option value="rating">Sort: Lowest rated first</option>
+        <option value="reviews">Sort: Fewest reviews first</option>
+      </select>
+    </div>
+
+    <div id="resultsContainer"></div>
+
+    <!-- EMPTY -->
+    <div class="empty-state hidden" id="emptyState">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">Enter a ZIP code to start prospecting</div>
+      <div>Brixly will surface the best local businesses to approach — ranked by review opportunity. Or add one manually if you already found it in the field.</div>
+    </div>
+
   </div>
 
-  <!-- LOADING -->
-  <div class="loading-state" id="loadingState">
-    <div class="spinner"></div>
-    <div class="loading-text">Scanning businesses in your area...</div>
-    <div class="loading-steps" id="loadingSteps">Analyzing review counts and ratings...</div>
-  </div>
-
-  <!-- STATS BAR -->
-  <div class="stats-bar hidden" id="statsBar">
-    <div class="stat-pill">
-      <span class="num" id="statTotal">0</span>
-      <span class="lbl">Businesses found</span>
+  <!-- ===================== HISTORY VIEW ===================== -->
+  <div class="view" id="historyView">
+    <div class="history-header">
+      <div class="history-title">Visit History</div>
+      <button class="clear-history-btn" onclick="clearHistory()">Clear History</button>
     </div>
-    <div class="stat-pill">
-      <span class="num" id="statHot" style="color:var(--accent)">0</span>
-      <span class="lbl">🔥 Hot targets</span>
+    <div id="historyContainer"></div>
+    <div class="empty-state hidden" id="historyEmptyState">
+      <div class="empty-icon">📜</div>
+      <div class="empty-title">No visits logged yet</div>
+      <div>Mark businesses as Closed or Skipped in the Prospector tab and they'll show up here.</div>
     </div>
-    <div class="stat-pill">
-      <span class="num" id="statWarm" style="color:var(--gold)">0</span>
-      <span class="lbl">⚡ Warm leads</span>
-    </div>
-    <div class="stat-pill">
-      <span class="num" id="statClosed" style="color:var(--green)">0</span>
-      <span class="lbl">✅ Closed</span>
-    </div>
-  </div>
-
-  <!-- TRACKER -->
-  <div class="tracker-bar hidden" id="trackerBar">
-    <span class="tracker-label">Your progress today</span>
-    <div class="tracker-counts">
-      <span class="tc visited">👣 <span id="tcVisited">0</span> visited</span>
-      <span class="tc closed">✅ <span id="tcClosed">0</span> closed</span>
-      <span class="tc skipped">⏭ <span id="tcSkipped">0</span> skipped</span>
-    </div>
-  </div>
-
-  <!-- RESULTS -->
-  <div id="resultsHeader" class="results-header hidden">
-    <div class="results-title">Showing <span id="resultCount">0</span> businesses — sorted by opportunity</div>
-    <select class="sort-select" onchange="sortResults(this.value)">
-      <option value="priority">Sort: Priority</option>
-      <option value="rating">Sort: Lowest rated first</option>
-      <option value="reviews">Sort: Fewest reviews first</option>
-    </select>
-  </div>
-
-  <div id="resultsContainer"></div>
-
-  <!-- EMPTY -->
-  <div class="empty-state hidden" id="emptyState">
-    <div class="empty-icon">🔍</div>
-    <div class="empty-title">Enter a ZIP code to start prospecting</div>
-    <div>Brixly will surface the best local businesses to approach — ranked by review opportunity.</div>
   </div>
 
 </main>
@@ -511,12 +789,88 @@
   </div>
 </div>
 
+<!-- ADD BUSINESS MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-title">Add a Business</div>
+    <div class="modal-sub">Found one walking around? Add it manually and it'll show up in your list with a priority score.</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Business Name *</label>
+        <input type="text" id="addName" placeholder="La Villa Taqueria">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="addType">
+          <option value="Restaurant / Taqueria">Restaurant / Taqueria</option>
+          <option value="Hair Salon">Hair Salon</option>
+          <option value="Barbershop">Barbershop</option>
+          <option value="Auto Shop / Detailer">Auto Shop / Detailer</option>
+          <option value="Spa / Wellness">Spa / Wellness</option>
+          <option value="Dental Office">Dental Office</option>
+          <option value="Gym / Fitness">Gym / Fitness</option>
+          <option value="Cleaning Service">Cleaning Service</option>
+          <option value="Cafe / Coffee Shop">Cafe / Coffee Shop</option>
+          <option value="Retail Store">Retail Store</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" id="addAddress" placeholder="1234 Stevens Creek Blvd, San José, CA">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="addPhone" placeholder="408-555-1234">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Current Rating (0–5)</label>
+        <input type="number" id="addRating" placeholder="3.9" min="0" max="5" step="0.1">
+      </div>
+      <div class="form-group">
+        <label># of Reviews</label>
+        <input type="number" id="addReviews" placeholder="34" min="0">
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="addSpanish">
+      <label for="addSpanish" style="margin:0;text-transform:none;font-weight:400;">Spanish-speaking owned business</label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-close" onclick="closeAddBusiness()">Cancel</button>
+      <button class="modal-submit" onclick="submitAddBusiness()">Add to List</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // State
 let businesses = [];
 let stats = { total: 0, hot: 0, warm: 0, closed: 0, visited: 0, skipped: 0 };
 let selectedCategories = ['restaurant', 'salon', 'barbershop', 'auto'];
 let currentPitch = '';
+
+const HISTORY_KEY = 'brixly_history_log';
+
+// ---------- NAV ----------
+function switchView(viewId, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(viewId).classList.remove('hidden');
+  document.getElementById(viewId).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (viewId === 'historyView') renderHistory();
+}
 
 // Category chips
 document.querySelectorAll('.cat-chip').forEach(chip => {
@@ -659,6 +1013,7 @@ function renderResults() {
   document.getElementById('trackerBar').classList.remove('hidden');
   document.getElementById('resultsHeader').classList.remove('hidden');
   document.getElementById('resultCount').textContent = businesses.length;
+  document.getElementById('emptyState').classList.add('hidden');
 
   renderCards(businesses);
 }
@@ -668,9 +1023,7 @@ function renderCards(list) {
   container.innerHTML = '';
 
   list.forEach((biz, idx) => {
-    const saved = JSON.parse(localStorage.getItem('brixly_' + biz.name) || '{"status":"none"}');
-    const isDone = saved.status === 'closed';
-    const isSkipped = saved.status === 'skipped';
+    const isDone = biz._status === 'closed';
 
     const stars = '★'.repeat(Math.floor(biz.rating)) + (biz.rating % 1 >= 0.5 ? '½' : '') + '☆'.repeat(5 - Math.ceil(biz.rating));
 
@@ -692,13 +1045,13 @@ function renderCards(list) {
       <div class="card-metrics">
         <div class="metric"><span class="stars">${stars}</span> <strong>${biz.rating}</strong> stars</div>
         <div class="metric">📝 <strong>${biz.reviewCount}</strong> reviews</div>
-        <div class="metric">📅 <strong>${biz.monthsOnGoogle}</strong> mo on Google</div>
+        ${biz.monthsOnGoogle ? `<div class="metric">📅 <strong>${biz.monthsOnGoogle}</strong> mo on Google</div>` : ''}
         ${biz.phone ? `<div class="metric">📞 <strong>${biz.phone}</strong></div>` : ''}
       </div>
       <div class="card-insight">💡 <strong>Opportunity:</strong> ${biz.insight}</div>
-      <div class="card-insight" style="background:transparent;padding:4px 0;margin-bottom:8px;font-size:12px;">
+      ${biz.walkInTime ? `<div class="card-insight" style="background:transparent;padding:4px 0;margin-bottom:8px;font-size:12px;">
         🕐 Best time to walk in: <strong style="color:var(--ink);">${biz.walkInTime}</strong>
-      </div>
+      </div>` : ''}
       <div class="card-actions">
         <button class="action-btn btn-pitch" onclick="showPitch(${idx})">📋 Get Pitch Script</button>
         <button class="action-btn btn-maps" onclick="openMaps('${encodeURIComponent(biz.name + ' ' + biz.address)}')">🗺️ Maps</button>
@@ -713,7 +1066,8 @@ function renderCards(list) {
 
 function markStatus(idx, status) {
   const biz = businesses[idx];
-  localStorage.setItem('brixly_' + biz.name, JSON.stringify({ status }));
+  biz._status = status;
+
   if (status === 'closed') {
     stats.closed = (stats.closed || 0) + 1;
     stats.visited = (stats.visited || 0) + 1;
@@ -722,10 +1076,14 @@ function markStatus(idx, status) {
     document.getElementById('statClosed').textContent = stats.closed;
   } else if (status === 'skipped') {
     stats.skipped = (stats.skipped || 0) + 1;
+    stats.visited = (stats.visited || 0) + 1;
     document.getElementById('tcSkipped').textContent = stats.skipped;
+    document.getElementById('tcVisited').textContent = stats.visited;
   }
   const card = document.getElementById(`card-${idx}`);
   if (card) card.style.opacity = '0.4';
+
+  recordHistory(biz, status);
 }
 
 function openMaps(query) {
@@ -756,7 +1114,6 @@ async function showPitch(idx) {
 Business context:
 - Current rating: ${biz.rating} stars
 - Current reviews: ${biz.reviewCount}
-- Months on Google: ${biz.monthsOnGoogle}
 - Spanish-owned: ${biz.spanishOwned}
 
 Brixly's offer: $99 setup + $149/month includes NFC review stand, badge reel for staff, Google profile optimization, AI review responses within 24hrs, monthly photo uploads, monthly growth report.
@@ -810,6 +1167,287 @@ function sortResults(by) {
   else if (by === 'reviews') sorted.sort((a, b) => a.reviewCount - b.reviewCount);
   else sorted.sort((a, b) => b.priorityScore - a.priorityScore);
   renderCards(sorted);
+}
+
+// ---------- ADD BUSINESS MANUALLY ----------
+function openAddBusiness() {
+  document.getElementById('addModal').classList.add('open');
+}
+function closeAddBusiness() {
+  document.getElementById('addModal').classList.remove('open');
+  ['addName','addAddress','addPhone','addRating','addReviews'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('addSpanish').checked = false;
+}
+
+function calcPriority(rating, reviewCount) {
+  if (reviewCount < 50 || rating < 4.0) return { priority: 'hot', score: 90 };
+  if (reviewCount <= 150 && rating >= 4.0 && rating <= 4.3) return { priority: 'warm', score: 60 };
+  return { priority: 'cold', score: 30 };
+}
+
+function submitAddBusiness() {
+  const name = document.getElementById('addName').value.trim();
+  if (!name) { alert('Business name is required'); return; }
+
+  const type = document.getElementById('addType').value;
+  const address = document.getElementById('addAddress').value.trim() || 'San José, CA';
+  const phone = document.getElementById('addPhone').value.trim();
+  const rating = parseFloat(document.getElementById('addRating').value) || 0;
+  const reviewCount = parseInt(document.getElementById('addReviews').value) || 0;
+  const spanishOwned = document.getElementById('addSpanish').checked;
+
+  const { priority, score } = calcPriority(rating, reviewCount);
+  const insight = `${reviewCount} reviews on Google${rating ? ` with a ${rating}★ rating` : ''}. Added manually from the field — verify details before pitching.`;
+
+  const biz = {
+    name, type, address, phone,
+    rating: rating || 0,
+    reviewCount: reviewCount || 0,
+    monthsOnGoogle: null,
+    spanishOwned,
+    priorityScore: score,
+    priority,
+    insight,
+    walkInTime: null
+  };
+
+  businesses.unshift(biz);
+  closeAddBusiness();
+  renderResults();
+  switchView('prospectorView', document.querySelector('.nav-tab[data-view="prospectorView"]'));
+}
+
+// ---------- HISTORY ----------
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  } catch (e) { return []; }
+}
+
+function saveHistory(list) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+}
+
+function recordHistory(biz, status) {
+  let history = loadHistory();
+  // remove any existing entry for this business name to avoid duplicates, keep latest
+  history = history.filter(h => h.name !== biz.name);
+  history.unshift({
+    name: biz.name,
+    type: biz.type,
+    address: biz.address,
+    status: status,
+    date: new Date().toISOString()
+  });
+  saveHistory(history);
+}
+
+function renderHistory() {
+  const history = loadHistory();
+  const container = document.getElementById('historyContainer');
+  const empty = document.getElementById('historyEmptyState');
+  container.innerHTML = '';
+
+  if (history.length === 0) {
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  history.forEach(h => {
+    const d = new Date(h.date);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    const item = document.createElement('div');
+    item.className = `history-item ${h.status}`;
+    item.innerHTML = `
+      <div>
+        <div class="hist-name">${h.name}</div>
+        <div class="hist-meta">${h.type || ''}${h.address ? ' · ' + h.address : ''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="hist-date">${dateStr} · ${timeStr}</span>
+        <span class="hist-status ${h.status}">${h.status === 'closed' ? '✅ Closed' : '⏭ Skipped'}</span>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function clearHistory() {
+  if (!confirm('Clear all visit history? This cannot be undone.')) return;
+  saveHistory([]);
+  renderHistory();
+}
+
+// ---------- LOOKUP SPECIFIC BUSINESS ----------
+let lookupBizData = null;
+
+async function lookupBusiness() {
+  const query = document.getElementById('lookupInput').value.trim();
+  if (!query) { alert('Enter a business name to look up'); return; }
+
+  const btn = document.getElementById('lookupBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Rating...';
+
+  const resultEl = document.getElementById('lookupResult');
+  resultEl.classList.remove('show', 'hot', 'warm', 'cold');
+  document.getElementById('lrInsight').innerHTML = '<em style="color:var(--muted)">Analyzing...</em>';
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `You are a local business analyst for Brixly, a San José CA company selling Google review management services.
+
+The user wants to rate this business as a Brixly sales prospect: "${query}"
+
+Generate a realistic opportunity analysis for this business as if you looked it up on Google Maps. Make the data plausible for a real San José area business of this type.
+
+Return ONLY valid JSON, no other text:
+{
+  "name": "Full Business Name",
+  "type": "Business Type (e.g. Taqueria, Hair Salon, Auto Shop)",
+  "address": "Realistic San José address",
+  "phone": "408-XXX-XXXX",
+  "rating": 3.9,
+  "reviewCount": 42,
+  "monthsOnGoogle": 24,
+  "spanishOwned": false,
+  "priorityScore": 88,
+  "priority": "hot",
+  "insight": "Sharp 2-3 sentence analysis referencing the specific rating and review numbers. Explain WHY this is or isn't a good Brixly prospect. Be direct.",
+  "walkInTime": "Best time to approach (e.g. Tues-Thurs 2-4pm)",
+  "reviewGap": "How many reviews they'd need to reach 100",
+  "competitorAvg": "Estimated avg reviews for similar businesses in this area"
+}`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content[0].text;
+    const clean = text.replace(/```json|```/g, '').trim();
+    lookupBizData = JSON.parse(clean);
+    renderLookupResult(lookupBizData);
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('lrInsight').innerHTML = '<em style="color:var(--red)">Error analyzing business. Try again.</em>';
+    resultEl.classList.add('show');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔎 Rate It';
+}
+
+function renderLookupResult(biz) {
+  const resultEl = document.getElementById('lookupResult');
+  resultEl.className = `lookup-result show ${biz.priority}`;
+
+  document.getElementById('lrName').textContent = biz.name + (biz.spanishOwned ? ' 🇲🇽' : '');
+  document.getElementById('lrType').textContent = biz.type + (biz.address ? ' · ' + biz.address : '');
+
+  const scoreEl = document.getElementById('lrScore');
+  scoreEl.textContent = biz.priorityScore + '/100';
+  scoreEl.className = `lookup-score ${biz.priority}`;
+
+  const badge = document.getElementById('lrBadge');
+  badge.className = `priority-badge ${biz.priority}`;
+  badge.textContent = biz.priority === 'hot' ? '🔥 Hot Target' : biz.priority === 'warm' ? '⚡ Warm Lead' : '❄️ Cold';
+
+  // Breakdown pills
+  const breakdown = document.getElementById('lrBreakdown');
+  breakdown.innerHTML = `
+    <div class="breakdown-pill"><span class="bp-label">Rating</span><span class="bp-val">${biz.rating}★</span></div>
+    <div class="breakdown-pill"><span class="bp-label">Reviews</span><span class="bp-val">${biz.reviewCount}</span></div>
+    <div class="breakdown-pill"><span class="bp-label">On Google</span><span class="bp-val">${biz.monthsOnGoogle} mo</span></div>
+    ${biz.reviewGap ? `<div class="breakdown-pill"><span class="bp-label">Gap to 100</span><span class="bp-val">+${biz.reviewGap}</span></div>` : ''}
+    ${biz.competitorAvg ? `<div class="breakdown-pill"><span class="bp-label">Area Avg</span><span class="bp-val">${biz.competitorAvg} reviews</span></div>` : ''}
+    ${biz.walkInTime ? `<div class="breakdown-pill"><span class="bp-label">Best Time</span><span class="bp-val">${biz.walkInTime}</span></div>` : ''}
+  `;
+
+  document.getElementById('lrInsight').innerHTML = `💡 <strong>Analysis:</strong> ${biz.insight}`;
+
+  const mapsBtn = document.getElementById('lrMapsBtn');
+  mapsBtn.onclick = () => openMaps(encodeURIComponent(biz.name + ' ' + biz.address));
+}
+
+async function lookupGetPitch() {
+  if (!lookupBizData) return;
+  // push it into businesses array at index 0 so showPitch() works
+  businesses.unshift(lookupBizData);
+  document.getElementById('pitchBizName').textContent = `Pitch — ${lookupBizData.name}`;
+  document.getElementById('pitchContent').textContent = 'Generating your custom pitch...';
+  document.getElementById('pitchModal').classList.add('open');
+
+  try {
+    const biz = lookupBizData;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 800,
+        messages: [{
+          role: 'user',
+          content: `Write a short, natural in-person sales pitch for Moses from Brixly to use when walking into ${biz.name}, a ${biz.type} in San José CA.
+
+Business context:
+- Current rating: ${biz.rating} stars
+- Current reviews: ${biz.reviewCount}
+- Spanish-owned: ${biz.spanishOwned}
+
+Brixly's offer: $99 setup + $149/month includes NFC review stand, badge reel for staff, Google profile optimization, AI review responses within 24hrs, monthly photo uploads, monthly growth report.
+
+Write a 3-part pitch:
+1. OPENER (1-2 sentences)
+2. THE PITCH (2-3 sentences)
+3. THE CLOSE (1-2 sentences)
+
+${biz.spanishOwned ? 'Include a Spanish version below.' : ''}
+Keep it conversational. Moses is 19, local, bilingual. No corporate language.
+
+Format:
+OPENER:
+[text]
+
+THE PITCH:
+[text]
+
+THE CLOSE:
+[text]
+${biz.spanishOwned ? '\nEN ESPAÑOL:\n[Spanish version]' : ''}`
+        }]
+      })
+    });
+    const data = await response.json();
+    currentPitch = data.content[0].text;
+    document.getElementById('pitchContent').textContent = currentPitch;
+  } catch (err) {
+    document.getElementById('pitchContent').textContent = 'Error generating pitch. Try again.';
+  }
+}
+
+function lookupMarkClosed() {
+  if (!lookupBizData) return;
+  recordHistory(lookupBizData, 'closed');
+  const btn = document.querySelector('#lookupResult .btn-done');
+  if (btn) { btn.textContent = '✅ Marked Closed'; btn.disabled = true; }
+}
+
+function lookupMarkSkipped() {
+  if (!lookupBizData) return;
+  recordHistory(lookupBizData, 'skipped');
+  const btn = document.querySelector('#lookupResult .btn-skip');
+  if (btn) { btn.textContent = '⏭ Skipped'; btn.disabled = true; }
 }
 
 // Init
