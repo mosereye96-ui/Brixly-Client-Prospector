@@ -504,6 +504,9 @@
   .hist-status.skipped { background: rgba(120,120,120,0.15); color: var(--muted); }
   .hist-date { font-size: 11px; color: var(--muted); white-space: nowrap; }
 
+  .btn-fav { background: var(--surface2); color: var(--gold); border: 1px solid var(--border2); }
+  .btn-fav.starred { background: rgba(212,168,67,0.15); border-color: var(--gold); }
+
   .hidden { display: none !important; }
 
   /* LOOKUP PANEL */
@@ -630,6 +633,7 @@
   <div class="nav-tabs">
     <div class="nav-tab active" data-view="prospectorView" onclick="switchView('prospectorView', this)">🔍 Prospector</div>
     <div class="nav-tab" data-view="historyView" onclick="switchView('historyView', this)">📜 History</div>
+    <div class="nav-tab" data-view="savedView" onclick="switchView('savedView', this)">⭐ Saved</div>
   </div>
   <div style="font-size:12px;color:var(--muted);">San José, CA</div>
 </header>
@@ -671,6 +675,7 @@
         <div class="lookup-actions">
           <button class="action-btn btn-pitch" onclick="lookupGetPitch()">📋 Get Pitch Script</button>
           <button class="action-btn btn-maps" id="lrMapsBtn">🗺️ Maps</button>
+          <button class="action-btn btn-fav" id="lrFavBtn" onclick="lookupToggleFav()">☆ Save</button>
           <button class="action-btn btn-done" onclick="lookupMarkClosed()">✅ Mark Closed</button>
           <button class="action-btn btn-skip" onclick="lookupMarkSkipped()">⏭ Skip</button>
         </div>
@@ -785,6 +790,20 @@
 
   </div>
 
+  <!-- ===================== SAVED VIEW ===================== -->
+  <div class="view" id="savedView">
+    <div class="history-header">
+      <div class="history-title">Saved Businesses</div>
+      <button class="clear-history-btn" onclick="clearFavs()">Clear All</button>
+    </div>
+    <div id="savedContainer"></div>
+    <div class="empty-state hidden" id="savedEmptyState">
+      <div class="empty-icon">⭐</div>
+      <div class="empty-title">No saved businesses yet</div>
+      <div>Hit the ☆ Save button on any business to save it here.</div>
+    </div>
+  </div>
+
   <!-- ===================== HISTORY VIEW ===================== -->
   <div class="view" id="historyView">
     <div class="history-header">
@@ -895,6 +914,7 @@ function switchView(viewId, el) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   if (viewId === 'historyView') renderHistory();
+  if (viewId === 'savedView') renderSaved();
 }
 
 // Category chips
@@ -1055,6 +1075,8 @@ function renderCards(list) {
 
     const stars = '★'.repeat(Math.floor(biz.rating)) + (biz.rating % 1 >= 0.5 ? '½' : '') + '☆'.repeat(5 - Math.ceil(biz.rating));
 
+    const favs = getFavs();
+    const isFaved = favs.some(f => f.name === biz.name);
     const card = document.createElement('div');
     card.className = `business-card ${biz.priority}`;
     card.id = `card-${idx}`;
@@ -1084,6 +1106,7 @@ function renderCards(list) {
         <button class="action-btn btn-pitch" onclick="showPitch(${idx})">📋 Get Pitch Script</button>
         <button class="action-btn btn-maps" onclick="openMaps('${encodeURIComponent(biz.name + ' ' + biz.address)}')">🗺️ Maps</button>
         ${biz.phone ? `<button class="action-btn btn-call" onclick="callBiz('${biz.phone}')">📞 Call</button>` : ''}
+        <button class="action-btn btn-fav ${isFaved ? 'starred' : ''}" onclick="toggleFav(${idx})" id="fav-${idx}">${isFaved ? '⭐ Saved' : '☆ Save'}</button>
         <button class="action-btn btn-done" onclick="markStatus(${idx}, 'closed')">✅ Closed</button>
         <button class="action-btn btn-skip" onclick="markStatus(${idx}, 'skipped')">⏭ Skip</button>
       </div>
@@ -1268,6 +1291,52 @@ function recordHistory(biz, status) {
     date: new Date().toISOString()
   });
   saveHistory(history);
+}
+
+function renderSaved() {
+  const favs = getFavs();
+  const container = document.getElementById('savedContainer');
+  const empty = document.getElementById('savedEmptyState');
+  container.innerHTML = '';
+
+  if (favs.length === 0) {
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  favs.forEach((biz, i) => {
+    const item = document.createElement('div');
+    item.className = `history-item`;
+    item.style.borderLeft = `3px solid var(--gold)`;
+    const d = new Date(biz.savedAt);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    item.innerHTML = `
+      <div>
+        <div class="hist-name">${biz.name}</div>
+        <div class="hist-meta">${biz.type || ''} · ${biz.address || ''}</div>
+        <div class="hist-meta" style="margin-top:4px;">⭐ ${biz.rating || 0} · ${biz.reviewCount || 0} reviews · Score: ${biz.priorityScore || 0}/100</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="hist-date">${dateStr}</span>
+        <button class="action-btn btn-skip" style="font-size:11px;padding:5px 10px;" onclick="removeFav(${i})">Remove</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function removeFav(idx) {
+  const favs = getFavs();
+  favs.splice(idx, 1);
+  saveFavs(favs);
+  renderSaved();
+}
+
+function clearFavs() {
+  if (!confirm('Clear all saved businesses?')) return;
+  saveFavs([]);
+  renderSaved();
 }
 
 function renderHistory() {
