@@ -1372,7 +1372,6 @@ async function fetchAutocomplete(query) {
 async function selectBusiness(place) {
   document.getElementById('searchDropdown').classList.remove('show');
   document.getElementById('lookupInput').value = place.name;
-  selectedPlaceData = place;
 
   const resultEl = document.getElementById('lookupResult');
   resultEl.className = 'lookup-result show';
@@ -1383,6 +1382,20 @@ async function selectBusiness(place) {
   document.getElementById('lrBreakdown').innerHTML = '';
   document.getElementById('lrInsight').innerHTML = '<em style="color:var(--muted)">Analyzing with real data...</em>';
 
+  const promptText = "You are a Brixly sales analyst. Brixly sells Google review management to local businesses ($99 setup + $149/month).
+
+REAL Google data:
+Name: " + place.name + "
+Type: " + place.type + "
+Address: " + place.address + "
+Rating: " + (place.rating || 0) + " stars
+Reviews: " + (place.reviewCount || 0) + "
+
+Return ONLY valid JSON (no markdown):
+{"name":"" + place.name.replace(/"/g,"'") + "","type":"" + place.type + "","address":"" + place.address.replace(/"/g,"'") + "","phone":"" + (place.phone||'') + "","rating":" + (place.rating||0) + ","reviewCount":" + (place.reviewCount||0) + ","monthsOnGoogle":24,"spanishOwned":false,"priorityScore":85,"priority":"hot","insight":"2-3 sharp sentences about why this is or is not a good Brixly prospect based on their real rating of " + (place.rating||0) + " stars and " + (place.reviewCount||0) + " reviews.","walkInTime":"Best time to walk in based on business type","reviewGap":" + Math.max(0, 100-(place.reviewCount||0)) + ","competitorAvg":"avg reviews for similar nearby businesses"}
+
+Set priority: hot if reviewCount<50 or rating<4.0, warm if 50-150 and 4.0-4.3, cold if >150 and >4.3. Set priorityScore: hot=85, warm=60, cold=30.";
+
   try {
     const response = await fetch('/.netlify/functions/claude', {
       method: 'POST',
@@ -1390,22 +1403,7 @@ async function selectBusiness(place) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `You are a Brixly sales analyst. Brixly sells Google review management to local businesses ($99 setup + $149/month).
-
-REAL Google data:
-Name: ${place.name}
-Type: ${place.type}
-Address: ${place.address}
-Rating: ${place.rating} stars
-Reviews: ${place.reviewCount}
-
-Return ONLY this JSON (no markdown fences):
-{"name":"${place.name.replace(/"/g,"'")}","type":"${place.type}","address":"${place.address.replace(/"/g,"'")}","phone":"${place.phone||''}","rating":${place.rating||0},"reviewCount":${place.reviewCount||0},"monthsOnGoogle":24,"spanishOwned":false,"priorityScore":85,"priority":"hot","insight":"2-3 sharp sentences about why this IS or IS NOT a good Brixly prospect based on their ${place.rating} rating and ${place.reviewCount} reviews.","walkInTime":"Best time to walk in based on business type","reviewGap":${Math.max(0,100-(place.reviewCount||0))},"competitorAvg":"avg reviews for similar businesses nearby"}
-
-Set priority: hot if reviews<50 or rating<4.0, warm if reviews 50-150 and rating 4.0-4.3, cold if reviews>150 and rating>4.3. Set priorityScore accordingly (hot=80-100, warm=50-79, cold=20-49).`
-        }]
+        messages: [{ role: 'user', content: promptText }]
       })
     });
 
@@ -1419,11 +1417,41 @@ Set priority: hot if reviews<50 or rating<4.0, warm if reviews 50-150 and rating
 
   } catch (err) {
     console.error(err);
-    document.getElementById('lrInsight').innerHTML = `<em style="color:var(--red)">Error: ${err.message}</em>`;
+    document.getElementById('lrInsight').innerHTML = '<em style="color:var(--red)">Error: ' + err.message + '</em>';
   }
 }
 
 
+function renderLookupResult(biz) {
+  const resultEl = document.getElementById('lookupResult');
+  resultEl.className = `lookup-result show ${biz.priority}`;
+
+  document.getElementById('lrName').textContent = biz.name + (biz.spanishOwned ? ' 🇲🇽' : '');
+  document.getElementById('lrType').textContent = biz.type + (biz.address ? ' · ' + biz.address : '');
+
+  const scoreEl = document.getElementById('lrScore');
+  scoreEl.textContent = biz.priorityScore + '/100';
+  scoreEl.className = `lookup-score ${biz.priority}`;
+
+  const badge = document.getElementById('lrBadge');
+  badge.className = `priority-badge ${biz.priority}`;
+  badge.textContent = biz.priority === 'hot' ? '🔥 Hot Target' : biz.priority === 'warm' ? '⚡ Warm Lead' : '❄️ Cold';
+
+  const breakdown = document.getElementById('lrBreakdown');
+  breakdown.innerHTML = `
+    <div class="breakdown-pill"><span class="bp-label">Rating</span><span class="bp-val">${biz.rating}★</span></div>
+    <div class="breakdown-pill"><span class="bp-label">Reviews</span><span class="bp-val">${biz.reviewCount}</span></div>
+    <div class="breakdown-pill"><span class="bp-label">On Google</span><span class="bp-val">${biz.monthsOnGoogle} mo</span></div>
+    ${biz.reviewGap ? `<div class="breakdown-pill"><span class="bp-label">Gap to 100</span><span class="bp-val">+${biz.reviewGap}</span></div>` : ''}
+    ${biz.competitorAvg ? `<div class="breakdown-pill"><span class="bp-label">Area Avg</span><span class="bp-val">${biz.competitorAvg}</span></div>` : ''}
+    ${biz.walkInTime ? `<div class="breakdown-pill"><span class="bp-label">Best Time</span><span class="bp-val">${biz.walkInTime}</span></div>` : ''}
+  `;
+
+  document.getElementById('lrInsight').innerHTML = `💡 <strong>Analysis:</strong> ${biz.insight}`;
+
+  const mapsBtn = document.getElementById('lrMapsBtn');
+  if (mapsBtn) mapsBtn.onclick = () => openMaps(encodeURIComponent(biz.name + ' ' + biz.address));
+}
 
 </script>
 </body>
