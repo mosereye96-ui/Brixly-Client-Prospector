@@ -978,8 +978,11 @@ Make the data feel realistic for San José's actual business landscape. Include 
     });
 
     const data = await response.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     const text = data.content[0].text;
-    const clean = text.replace(/```json|```/g, '').trim();
+    // Extract JSON array from response, handling markdown fences
+    const jsonMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    const clean = jsonMatch ? jsonMatch[0] : text.replace(/```json/g, '').replace(/```/g, '').trim();
     businesses = JSON.parse(clean);
 
     clearInterval(stepInterval);
@@ -1333,8 +1336,10 @@ Return ONLY valid JSON, no other text:
     });
 
     const data = await response.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     const text = data.content[0].text;
-    const clean = text.replace(/```json|```/g, '').trim();
+    const jsonMatch2 = text.match(/\{[\s\S]*\}/);
+    const clean = jsonMatch2 ? jsonMatch2[0] : text.replace(/```json/g, '').replace(/```/g, '').trim();
     lookupBizData = JSON.parse(clean);
     renderLookupResult(lookupBizData);
 
