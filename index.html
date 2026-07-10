@@ -898,11 +898,63 @@
 </div>
 
 <script>
+
+// ---------- FAVOURITES ----------
+const FAVS_KEY = 'brixly_favs';
+function getFavs() { try { return JSON.parse(localStorage.getItem(FAVS_KEY) || '[]'); } catch { return []; } }
+function saveFavs(list) { localStorage.setItem(FAVS_KEY, JSON.stringify(list)); }
+
+function toggleFav(idx) {
+  const biz = businesses[idx];
+  let favs = getFavs();
+  const exists = favs.findIndex(f => f.name === biz.name);
+  if (exists >= 0) { favs.splice(exists, 1); } else { favs.unshift({ ...biz, savedAt: new Date().toISOString() }); }
+  saveFavs(favs);
+  const btn = document.getElementById('fav-' + idx);
+  if (btn) { const nowFaved = getFavs().some(f => f.name === biz.name); btn.textContent = nowFaved ? '⭐ Saved' : '☆ Save'; btn.classList.toggle('starred', nowFaved); }
+}
+
+function lookupToggleFav() {
+  if (!lookupBizData) return;
+  let favs = getFavs();
+  const exists = favs.findIndex(f => f.name === lookupBizData.name);
+  if (exists >= 0) { favs.splice(exists, 1); } else { favs.unshift({ ...lookupBizData, savedAt: new Date().toISOString() }); }
+  saveFavs(favs);
+  const btn = document.getElementById('lrFavBtn');
+  const nowFaved = getFavs().some(f => f.name === lookupBizData.name);
+  btn.textContent = nowFaved ? '⭐ Saved' : '☆ Save';
+  btn.classList.toggle('starred', nowFaved);
+}
+
+function removeFav(idx) { const favs = getFavs(); favs.splice(idx, 1); saveFavs(favs); renderSaved(); }
+function clearFavs() { if (!confirm('Clear all saved businesses?')) return; saveFavs([]); renderSaved(); }
+
+function renderSaved() {
+  const favs = getFavs();
+  const container = document.getElementById('savedContainer');
+  const empty = document.getElementById('savedEmptyState');
+  container.innerHTML = '';
+  if (favs.length === 0) { empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  favs.forEach((biz, i) => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.style.borderLeft = '3px solid var(--gold)';
+    const d = new Date(biz.savedAt);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    item.innerHTML = '<div><div class="hist-name">' + biz.name + '</div><div class="hist-meta">' + (biz.type||'') + ' · ' + (biz.address||'') + '</div><div class="hist-meta" style="margin-top:4px;">⭐ ' + (biz.rating||0) + ' · ' + (biz.reviewCount||0) + ' reviews · Score: ' + (biz.priorityScore||0) + '/100</div></div><div style="display:flex;align-items:center;gap:10px;"><span class="hist-date">' + dateStr + '</span><button class="action-btn btn-skip" style="font-size:11px;padding:5px 10px;" onclick="removeFav(' + i + ')">Remove</button></div>';
+    container.appendChild(item);
+  });
+}
+// ---------- END FAVOURITES ----------
+
 // State
 let businesses = [];
 let stats = { total: 0, hot: 0, warm: 0, closed: 0, visited: 0, skipped: 0 };
 let selectedCategories = ['restaurant', 'salon', 'barbershop', 'auto'];
 let currentPitch = '';
+
+
 
 const HISTORY_KEY = 'brixly_history_log';
 
