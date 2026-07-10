@@ -1382,19 +1382,40 @@ async function selectBusiness(place) {
   document.getElementById('lrBreakdown').innerHTML = '';
   document.getElementById('lrInsight').innerHTML = '<em style="color:var(--muted)">Analyzing with real data...</em>';
 
-  const promptText = "You are a Brixly sales analyst. Brixly sells Google review management to local businesses ($99 setup + $149/month).
+  const rating = place.rating || 0;
+  const reviews = place.reviewCount || 0;
+  const gap = Math.max(0, 100 - reviews);
+  const priority = reviews < 50 || rating < 4.0 ? 'hot' : (reviews <= 150 && rating <= 4.3 ? 'warm' : 'cold');
+  const score = priority === 'hot' ? 85 : (priority === 'warm' ? 60 : 30);
 
-REAL Google data:
-Name: " + place.name + "
-Type: " + place.type + "
-Address: " + place.address + "
-Rating: " + (place.rating || 0) + " stars
-Reviews: " + (place.reviewCount || 0) + "
-
-Return ONLY valid JSON (no markdown):
-{"name":"" + place.name.replace(/"/g,"'") + "","type":"" + place.type + "","address":"" + place.address.replace(/"/g,"'") + "","phone":"" + (place.phone||'') + "","rating":" + (place.rating||0) + ","reviewCount":" + (place.reviewCount||0) + ","monthsOnGoogle":24,"spanishOwned":false,"priorityScore":85,"priority":"hot","insight":"2-3 sharp sentences about why this is or is not a good Brixly prospect based on their real rating of " + (place.rating||0) + " stars and " + (place.reviewCount||0) + " reviews.","walkInTime":"Best time to walk in based on business type","reviewGap":" + Math.max(0, 100-(place.reviewCount||0)) + ","competitorAvg":"avg reviews for similar nearby businesses"}
-
-Set priority: hot if reviewCount<50 or rating<4.0, warm if 50-150 and 4.0-4.3, cold if >150 and >4.3. Set priorityScore: hot=85, warm=60, cold=30.";
+  const promptText = [
+    'You are a Brixly sales analyst. Brixly sells Google review management ($99 setup + $149/month).',
+    '',
+    'REAL Google data:',
+    'Name: ' + place.name,
+    'Type: ' + place.type,
+    'Address: ' + place.address,
+    'Rating: ' + rating + ' stars',
+    'Reviews: ' + reviews,
+    '',
+    'Return ONLY valid JSON (no markdown fences):',
+    '{',
+    '  "name": "' + place.name.replace(/"/g, "'") + '",',
+    '  "type": "' + place.type + '",',
+    '  "address": "' + place.address.replace(/"/g, "'") + '",',
+    '  "phone": "' + (place.phone || '') + '",',
+    '  "rating": ' + rating + ',',
+    '  "reviewCount": ' + reviews + ',',
+    '  "monthsOnGoogle": 24,',
+    '  "spanishOwned": false,',
+    '  "priorityScore": ' + score + ',',
+    '  "priority": "' + priority + '",',
+    '  "insight": "Write 2-3 sharp sentences explaining why this business with ' + rating + ' stars and ' + reviews + ' reviews is or is not a good Brixly prospect.",',
+    '  "walkInTime": "Best time to walk in for this business type",',
+    '  "reviewGap": ' + gap + ',',
+    '  "competitorAvg": "Estimated average reviews for similar local businesses"',
+    '}'
+  ].join('\n');
 
   try {
     const response = await fetch('/.netlify/functions/claude', {
