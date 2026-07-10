@@ -645,9 +645,9 @@
       <div class="lookup-row">
         <div class="input-group">
           <label>Business Name</label>
-          <input type="text" id="lookupInput" placeholder="e.g. El Toro Taqueria, San José CA" onkeydown="if(event.key==='Enter') lookupBusiness()">
+          <input type="text" id="lookupInput" placeholder="e.g. El Toro Taqueria..." autocomplete="off" oninput="autocompleteSearch(this.value)" onkeydown="if(event.key==='Escape') closeDropdown()">
         </div>
-        <button class="lookup-btn" id="lookupBtn" onclick="lookupBusiness()">🔎 Rate It</button>
+        <button class="lookup-btn" id="lookupBtn" style="display:none">🔎 Rate It</button>
       </div>
 
       <!-- SEARCH RESULTS DROPDOWN -->
@@ -1312,50 +1312,99 @@ function clearHistory() {
 // ---------- LOOKUP SPECIFIC BUSINESS ----------
 let lookupBizData = null;
 
-async function lookupBusiness() {
-  const query = document.getElementById('lookupInput').value.trim();
-  if (!query) { alert('Enter a business name to look up'); return; }
+let autocompleteTimer = null;
+let selectedPlaceData = null;
 
-  const btn = document.getElementById('lookupBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Rating...';
+function autocompleteSearch(val) {
+  const dropdown = document.getElementById('searchDropdown');
+  if (val.length < 2) {
+    dropdown.classList.remove('show');
+    dropdown.innerHTML = '';
+    return;
+  }
+  clearTimeout(autocompleteTimer);
+  autocompleteTimer = setTimeout(() => fetchAutocomplete(val), 350);
+}
+
+function closeDropdown() {
+  document.getElementById('searchDropdown').classList.remove('show');
+}
+
+async function fetchAutocomplete(query) {
+  const dropdown = document.getElementById('searchDropdown');
+  dropdown.innerHTML = '<div class="search-result-item"><div class="sri-meta">Searching...</div></div>';
+  dropdown.classList.add('show');
+
+  try {
+    const res = await fetch('/.netlify/functions/places', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query + ' San José CA' })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const results = data.results || [];
+    dropdown.innerHTML = '';
+
+    if (results.length === 0) {
+      dropdown.innerHTML = '<div class="search-result-item"><div class="sri-meta">No results found</div></div>';
+      return;
+    }
+
+    results.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'search-result-item';
+      item.innerHTML = `
+        <div class="sri-name">${r.name}</div>
+        <div class="sri-meta">${r.address}</div>
+        <div class="sri-rating">${r.rating ? '⭐ ' + r.rating + ' · ' + r.reviewCount.toLocaleString() + ' reviews' : 'No reviews yet'}</div>
+      `;
+      item.onclick = () => selectBusiness(r);
+      dropdown.appendChild(item);
+    });
+
+  } catch (err) {
+    dropdown.innerHTML = `<div class="search-result-item"><div class="sri-meta" style="color:var(--red)">Error: ${err.message}</div></div>`;
+  }
+}
+
+async function selectBusiness(place) {
+  document.getElementById('searchDropdown').classList.remove('show');
+  document.getElementById('lookupInput').value = place.name;
+  selectedPlaceData = place;
 
   const resultEl = document.getElementById('lookupResult');
-  resultEl.classList.remove('show', 'hot', 'warm', 'cold');
-  document.getElementById('lrInsight').innerHTML = '<em style="color:var(--muted)">Analyzing...</em>';
+  resultEl.className = 'lookup-result show';
+  document.getElementById('lrName').textContent = place.name;
+  document.getElementById('lrType').textContent = place.type + (place.address ? ' · ' + place.address : '');
+  document.getElementById('lrScore').textContent = '...';
+  document.getElementById('lrBadge').textContent = '';
+  document.getElementById('lrBreakdown').innerHTML = '';
+  document.getElementById('lrInsight').innerHTML = '<em style="color:var(--muted)">Analyzing with real data...</em>';
 
   try {
     const response = await fetch('/.netlify/functions/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1000,
         messages: [{
           role: 'user',
-          content: `You are a local business analyst for Brixly, a San José CA company selling Google review management services.
+          content: `You are a Brixly sales analyst. Brixly sells Google review management to local businesses ($99 setup + $149/month).
 
-The user wants to rate this business as a Brixly sales prospect: "${query}"
+REAL Google data:
+Name: ${place.name}
+Type: ${place.type}
+Address: ${place.address}
+Rating: ${place.rating} stars
+Reviews: ${place.reviewCount}
 
-Generate a realistic opportunity analysis for this business as if you looked it up on Google Maps. Make the data plausible for a real San José area business of this type.
+Return ONLY this JSON (no markdown fences):
+{"name":"${place.name.replace(/"/g,"'")}","type":"${place.type}","address":"${place.address.replace(/"/g,"'")}","phone":"${place.phone||''}","rating":${place.rating||0},"reviewCount":${place.reviewCount||0},"monthsOnGoogle":24,"spanishOwned":false,"priorityScore":85,"priority":"hot","insight":"2-3 sharp sentences about why this IS or IS NOT a good Brixly prospect based on their ${place.rating} rating and ${place.reviewCount} reviews.","walkInTime":"Best time to walk in based on business type","reviewGap":${Math.max(0,100-(place.reviewCount||0))},"competitorAvg":"avg reviews for similar businesses nearby"}
 
-Return ONLY valid JSON, no other text:
-{
-  "name": "Full Business Name",
-  "type": "Business Type (e.g. Taqueria, Hair Salon, Auto Shop)",
-  "address": "Realistic San José address",
-  "phone": "408-XXX-XXXX",
-  "rating": 3.9,
-  "reviewCount": 42,
-  "monthsOnGoogle": 24,
-  "spanishOwned": false,
-  "priorityScore": 88,
-  "priority": "hot",
-  "insight": "Sharp 2-3 sentence analysis referencing the specific rating and review numbers. Explain WHY this is or isn't a good Brixly prospect. Be direct.",
-  "walkInTime": "Best time to approach (e.g. Tues-Thurs 2-4pm)",
-  "reviewGap": "How many reviews they'd need to reach 100",
-  "competitorAvg": "Estimated avg reviews for similar businesses in this area"
-}`
+Set priority: hot if reviews<50 or rating<4.0, warm if reviews 50-150 and rating 4.0-4.3, cold if reviews>150 and rating>4.3. Set priorityScore accordingly (hot=80-100, warm=50-79, cold=20-49).`
         }]
       })
     });
@@ -1363,125 +1412,15 @@ Return ONLY valid JSON, no other text:
     const data = await response.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     const text = data.content[0].text;
-    const jsonMatch2 = text.match(/\{[\s\S]*\}/);
-    const clean = jsonMatch2 ? jsonMatch2[0] : text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const clean = jsonMatch ? jsonMatch[0] : text.replace(/```json/g,'').replace(/```/g,'').trim();
     lookupBizData = JSON.parse(clean);
     renderLookupResult(lookupBizData);
 
   } catch (err) {
     console.error(err);
-    document.getElementById('lrInsight').innerHTML = '<em style="color:var(--red)">Error analyzing business. Try again.</em>';
-    resultEl.classList.add('show');
-  }
-
-  btn.disabled = false;
-  btn.textContent = '🔎 Rate It';
-}
-
-function renderLookupResult(biz) {
-  const resultEl = document.getElementById('lookupResult');
-  resultEl.className = `lookup-result show ${biz.priority}`;
-
-  document.getElementById('lrName').textContent = biz.name + (biz.spanishOwned ? ' 🇲🇽' : '');
-  document.getElementById('lrType').textContent = biz.type + (biz.address ? ' · ' + biz.address : '');
-
-  const scoreEl = document.getElementById('lrScore');
-  scoreEl.textContent = biz.priorityScore + '/100';
-  scoreEl.className = `lookup-score ${biz.priority}`;
-
-  const badge = document.getElementById('lrBadge');
-  badge.className = `priority-badge ${biz.priority}`;
-  badge.textContent = biz.priority === 'hot' ? '🔥 Hot Target' : biz.priority === 'warm' ? '⚡ Warm Lead' : '❄️ Cold';
-
-  // Breakdown pills
-  const breakdown = document.getElementById('lrBreakdown');
-  breakdown.innerHTML = `
-    <div class="breakdown-pill"><span class="bp-label">Rating</span><span class="bp-val">${biz.rating}★</span></div>
-    <div class="breakdown-pill"><span class="bp-label">Reviews</span><span class="bp-val">${biz.reviewCount}</span></div>
-    <div class="breakdown-pill"><span class="bp-label">On Google</span><span class="bp-val">${biz.monthsOnGoogle} mo</span></div>
-    ${biz.reviewGap ? `<div class="breakdown-pill"><span class="bp-label">Gap to 100</span><span class="bp-val">+${biz.reviewGap}</span></div>` : ''}
-    ${biz.competitorAvg ? `<div class="breakdown-pill"><span class="bp-label">Area Avg</span><span class="bp-val">${biz.competitorAvg} reviews</span></div>` : ''}
-    ${biz.walkInTime ? `<div class="breakdown-pill"><span class="bp-label">Best Time</span><span class="bp-val">${biz.walkInTime}</span></div>` : ''}
-  `;
-
-  document.getElementById('lrInsight').innerHTML = `💡 <strong>Analysis:</strong> ${biz.insight}`;
-
-  const mapsBtn = document.getElementById('lrMapsBtn');
-  mapsBtn.onclick = () => openMaps(encodeURIComponent(biz.name + ' ' + biz.address));
-}
-
-async function lookupGetPitch() {
-  if (!lookupBizData) return;
-  // push it into businesses array at index 0 so showPitch() works
-  businesses.unshift(lookupBizData);
-  document.getElementById('pitchBizName').textContent = `Pitch — ${lookupBizData.name}`;
-  document.getElementById('pitchContent').textContent = 'Generating your custom pitch...';
-  document.getElementById('pitchModal').classList.add('open');
-
-  try {
-    const biz = lookupBizData;
-    const response = await fetch('/.netlify/functions/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 800,
-        messages: [{
-          role: 'user',
-          content: `Write a short, natural in-person sales pitch for Moses from Brixly to use when walking into ${biz.name}, a ${biz.type} in San José CA.
-
-Business context:
-- Current rating: ${biz.rating} stars
-- Current reviews: ${biz.reviewCount}
-- Spanish-owned: ${biz.spanishOwned}
-
-Brixly's offer: $99 setup + $149/month includes NFC review stand, badge reel for staff, Google profile optimization, AI review responses within 24hrs, monthly photo uploads, monthly growth report.
-
-Write a 3-part pitch:
-1. OPENER (1-2 sentences)
-2. THE PITCH (2-3 sentences)
-3. THE CLOSE (1-2 sentences)
-
-${biz.spanishOwned ? 'Include a Spanish version below.' : ''}
-Keep it conversational. Moses is 19, local, bilingual. No corporate language.
-
-Format:
-OPENER:
-[text]
-
-THE PITCH:
-[text]
-
-THE CLOSE:
-[text]
-${biz.spanishOwned ? '\nEN ESPAÑOL:\n[Spanish version]' : ''}`
-        }]
-      })
-    });
-    const data = await response.json();
-    currentPitch = data.content[0].text;
-    document.getElementById('pitchContent').textContent = currentPitch;
-  } catch (err) {
-    document.getElementById('pitchContent').textContent = 'Error generating pitch. Try again.';
+    document.getElementById('lrInsight').innerHTML = `<em style="color:var(--red)">Error: ${err.message}</em>`;
   }
 }
 
-function lookupMarkClosed() {
-  if (!lookupBizData) return;
-  recordHistory(lookupBizData, 'closed');
-  const btn = document.querySelector('#lookupResult .btn-done');
-  if (btn) { btn.textContent = '✅ Marked Closed'; btn.disabled = true; }
-}
 
-function lookupMarkSkipped() {
-  if (!lookupBizData) return;
-  recordHistory(lookupBizData, 'skipped');
-  const btn = document.querySelector('#lookupResult .btn-skip');
-  if (btn) { btn.textContent = '⏭ Skipped'; btn.disabled = true; }
-}
-
-// Init
-document.getElementById('emptyState').classList.remove('hidden');
-</script>
-</body>
-</html>
