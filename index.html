@@ -536,6 +536,28 @@
   .lookup-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   .lookup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* SEARCH RESULTS DROPDOWN */
+  .search-results-dropdown {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    margin-top: 8px;
+    overflow: hidden;
+    display: none;
+  }
+  .search-results-dropdown.show { display: block; }
+  .search-result-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--surface); }
+  .sri-name { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+  .sri-meta { font-size: 12px; color: var(--muted); }
+  .sri-rating { font-size: 12px; color: var(--gold); margin-top: 2px; }
+
   /* LOOKUP RESULT CARD */
   .lookup-result {
     margin-top: 18px;
@@ -627,6 +649,9 @@
         </div>
         <button class="lookup-btn" id="lookupBtn" onclick="lookupBusiness()">🔎 Rate It</button>
       </div>
+
+      <!-- SEARCH RESULTS DROPDOWN -->
+      <div class="search-results-dropdown" id="searchDropdown"></div>
 
       <!-- LOOKUP RESULT -->
       <div class="lookup-result" id="lookupResult">
