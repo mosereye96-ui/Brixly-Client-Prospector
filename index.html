@@ -3,1598 +3,651 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brixly Prospector — Find Your Next Client</title>
+<title>Brixly Client Tracker</title>
 <style>
   :root {
     --paper: #0a0a0a;
     --surface: #111111;
-    --surface2: #181818;
+    --surface2: #1a1a1a;
     --border: #222222;
-    --border2: #2a2a2a;
     --ink: #f0ede8;
-    --muted: #777777;
+    --muted: #888888;
     --accent: #c1502e;
     --accent-light: #e8673d;
     --gold: #d4a843;
     --green: #52b788;
-    --red: #e34948;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: var(--paper);
     color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* HEADER */
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(10,10,10,0.95);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    backdrop-filter: blur(12px);
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .logo {
-    font-family: 'Georgia', serif;
-    font-size: 18px;
-    font-weight: 700;
-  }
-  .logo span { color: var(--accent); }
-  .logo-sub {
-    font-size: 11px;
-    color: var(--muted);
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
-
-  /* NAV TABS */
-  .nav-tabs {
-    display: flex;
-    gap: 6px;
-    background: var(--surface2);
-    padding: 4px;
-    border-radius: 10px;
-    border: 1px solid var(--border2);
-  }
-  .nav-tab {
-    padding: 8px 16px;
-    border-radius: 7px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--muted);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.15s;
-  }
-  .nav-tab:hover { color: var(--ink); }
-  .nav-tab.active { background: var(--accent); color: white; }
-
-  /* MAIN */
-  main { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
-  .view { display: none; }
-  .view.active { display: block; }
-
-  /* SEARCH PANEL */
-  .search-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    margin-bottom: 32px;
-  }
-  .panel-title {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .panel-title::before { content: ''; width: 16px; height: 1px; background: var(--accent); }
-
-  .search-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
-  .input-group { flex: 1; min-width: 140px; }
-  .input-group label {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .input-group input, .input-group select {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    color: var(--ink);
-    padding: 11px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .input-group input:focus, .input-group select:focus { border-color: var(--accent); }
-  .input-group select option { background: var(--surface2); }
-
-  .category-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-  .cat-chip {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid var(--border2);
-    background: var(--surface2);
-    color: var(--muted);
-    transition: all 0.15s;
-    user-select: none;
-  }
-  .cat-chip:hover { border-color: var(--accent); color: var(--ink); }
-  .cat-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
-
-  .btn-row { display: flex; gap: 10px; }
-
-  .search-btn {
-    flex: 1;
-    background: var(--accent);
-    color: white;
-    padding: 14px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .search-btn:hover:not(:disabled) { background: var(--accent-light); }
-  .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .add-btn {
-    background: var(--surface2);
-    color: var(--ink);
-    border: 1px solid var(--border2);
-    padding: 14px 18px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: border-color 0.2s;
-    white-space: nowrap;
-  }
-  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* STATS BAR */
-  .stats-bar {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 24px;
-  }
-  .stat-pill {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-size: 13px;
-  }
-  .stat-pill .num { font-weight: 700; color: var(--ink); font-size: 18px; display: block; }
-  .stat-pill .lbl { color: var(--muted); font-size: 11px; }
-
-  /* RESULTS */
-  .results-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .results-title { font-size: 14px; font-weight: 600; color: var(--muted); }
-  .results-title span { color: var(--ink); font-weight: 700; }
-
-  .sort-select {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-family: inherit;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .business-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
-    position: relative;
-  }
-  .business-card:hover { border-color: var(--border2); }
-  .business-card.hot { border-left: 3px solid var(--accent); }
-  .business-card.warm { border-left: 3px solid var(--gold); }
-  .business-card.cold { border-left: 3px solid var(--border2); }
-
-  .card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .biz-name { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
-  .biz-type { font-size: 12px; color: var(--muted); font-weight: 500; }
-
-  .priority-badge {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 20px;
-    flex-shrink: 0;
-  }
-  .priority-badge.hot { background: rgba(193,80,46,0.15); color: var(--accent); }
-  .priority-badge.warm { background: rgba(212,168,67,0.15); color: var(--gold); }
-  .priority-badge.cold { background: rgba(120,120,120,0.15); color: var(--muted); }
-
-  .card-metrics {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-  .metric { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
-  .metric strong { color: var(--ink); font-weight: 600; }
-  .metric .stars { color: var(--gold); }
-
-  .card-insight {
-    background: var(--surface2);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.55;
-    margin-bottom: 12px;
-  }
-  .card-insight strong { color: var(--accent); }
-
-  .card-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .action-btn {
-    padding: 7px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: opacity 0.15s;
-  }
-  .action-btn:hover { opacity: 0.8; }
-  .btn-pitch { background: var(--accent); color: white; }
-  .btn-maps { background: var(--surface2); color: var(--ink); border: 1px solid var(--border2); }
-  .btn-call { background: var(--surface2); color: var(--green); border: 1px solid var(--border2); }
-  .btn-done { background: rgba(82,183,136,0.15); color: var(--green); border: 1px solid rgba(82,183,136,0.25); }
-  .btn-skip { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); }
-
-  /* MODAL (shared: pitch + add business) */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 500;
-    align-items: center;
-    justify-content: center;
     padding: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 { font-family: Georgia, serif; font-size: 26px; margin-bottom: 4px; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+  .top-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 20px; flex: 1; min-width: 140px;
+  }
+  .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .stat-card .value { font-family: Georgia, serif; font-size: 26px; font-weight: 700; }
+  .stat-card .value.gold { color: var(--gold); }
+  .stat-card .value.green { color: var(--green); }
+
+  .btn {
+    background: var(--accent); color: white; border: none; padding: 10px 18px;
+    border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;
+  }
+  .btn:hover { background: var(--accent-light); }
+  .btn.secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--ink); }
+  .btn.small { padding: 6px 12px; font-size: 12px; }
+  .btn.danger { background: transparent; border: 1px solid #713b2e; color: #e0836a; }
+
+  .client-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .client-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; cursor: pointer; transition: border-color 0.15s;
+  }
+  .client-card:hover { border-color: var(--accent); }
+  .client-card.selected { border-color: var(--gold); }
+  .client-head { display: flex; justify-content: space-between; align-items: center; }
+  .client-name { font-weight: 700; font-size: 16px; }
+  .client-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .client-stats { display: flex; gap: 20px; margin-top: 10px; font-size: 13px; }
+  .client-stats .stat b { color: var(--gold); }
+
+  .badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.04em;
+  }
+  .badge.paid { background: rgba(82,183,136,0.15); color: var(--green); }
+  .badge.due { background: rgba(212,168,67,0.15); color: var(--gold); }
+  .badge.overdue { background: rgba(193,80,46,0.15); color: var(--accent-light); }
+
+  .detail-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; margin-top: 16px;
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+  .form-group input, .form-group select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--ink);
+    padding: 8px 10px; border-radius: 6px; font-size: 14px;
+  }
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center; z-index: 100;
   }
   .modal-overlay.open { display: flex; }
   .modal {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 16px;
-    padding: 28px;
-    max-width: 560px;
-    width: 100%;
-    max-height: 85vh;
-    overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; width: 90%; max-width: 460px; max-height: 85vh; overflow-y: auto;
   }
-  .modal-title { font-family: 'Georgia', serif; font-size: 20px; margin-bottom: 6px; }
-  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-  .pitch-block {
-    background: var(--surface2);
-    border-radius: 8px;
-    padding: 16px;
-    font-size: 14px;
-    line-height: 1.7;
-    color: var(--ink);
-    margin-bottom: 16px;
-    white-space: pre-wrap;
-  }
-  .modal-actions { display: flex; gap: 10px; }
-  .modal-close {
-    background: var(--surface2);
-    color: var(--muted);
-    border: 1px solid var(--border2);
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .modal-copy, .modal-submit {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  /* ADD BUSINESS FORM */
-  .form-row { display: flex; gap: 12px; margin-bottom: 14px; }
-  .form-group { flex: 1; }
-  .form-group label {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .form-group input, .form-group select {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    color: var(--ink);
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-  }
-  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
-  .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 18px;
-    font-size: 13px;
-    color: var(--ink);
-  }
-  .checkbox-row input { width: auto; }
-
-  /* LOADING */
-  .loading-state {
-    display: none;
-    text-align: center;
-    padding: 60px 24px;
-  }
-  .loading-state.show { display: block; }
-  .spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 14px; color: var(--muted); }
-  .loading-steps { margin-top: 12px; font-size: 12px; color: var(--muted); }
-
-  /* EMPTY STATE */
-  .empty-state {
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--muted);
-  }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-title { font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-
-  /* TRACKER */
-  .tracker-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 13px;
-  }
-  .tracker-label { color: var(--muted); }
-  .tracker-counts { display: flex; gap: 16px; }
-  .tc { font-weight: 700; }
-  .tc.visited { color: var(--gold); }
-  .tc.closed { color: var(--green); }
-  .tc.skipped { color: var(--muted); }
-
-  /* HISTORY VIEW */
-  .history-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .history-title { font-size: 20px; font-family: 'Georgia', serif; }
-  .clear-history-btn {
-    background: var(--surface2);
-    color: var(--red);
-    border: 1px solid var(--border2);
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .clear-history-btn:hover { border-color: var(--red); }
-
-  .history-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .history-item.closed { border-left: 3px solid var(--green); }
-  .history-item.skipped { border-left: 3px solid var(--border2); }
-  .hist-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
-  .hist-meta { font-size: 12px; color: var(--muted); }
-  .hist-status {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    padding: 5px 12px;
-    border-radius: 20px;
-  }
-  .hist-status.closed { background: rgba(82,183,136,0.15); color: var(--green); }
-  .hist-status.skipped { background: rgba(120,120,120,0.15); color: var(--muted); }
-  .hist-date { font-size: 11px; color: var(--muted); white-space: nowrap; }
-
-  .btn-fav { background: var(--surface2); color: var(--gold); border: 1px solid var(--border2); }
-  .btn-fav.starred { background: rgba(212,168,67,0.15); border-color: var(--gold); }
-
-  .hidden { display: none !important; }
-
-  /* LOOKUP PANEL */
-  .lookup-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px 28px;
-    margin-bottom: 32px;
-  }
-  .lookup-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
-  .lookup-row .input-group { flex: 1; margin-bottom: 0; }
-  .lookup-btn {
-    background: var(--surface2);
-    color: var(--ink);
-    border: 1px solid var(--border2);
-    padding: 11px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: border-color 0.2s;
-    flex-shrink: 0;
-  }
-  .lookup-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-  .lookup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* SEARCH RESULTS DROPDOWN */
-  .search-results-dropdown {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    margin-top: 8px;
-    overflow: hidden;
-    display: none;
-  }
-  .search-results-dropdown.show { display: block; }
-  .search-result-item {
-    padding: 12px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-  .search-result-item:last-child { border-bottom: none; }
-  .search-result-item:hover { background: var(--surface); }
-  .sri-name { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
-  .sri-meta { font-size: 12px; color: var(--muted); }
-  .sri-rating { font-size: 12px; color: var(--gold); margin-top: 2px; }
-
-  /* LOOKUP RESULT CARD */
-  .lookup-result {
-    margin-top: 18px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 12px;
-    padding: 20px;
-    display: none;
-  }
-  .lookup-result.show { display: block; }
-  .lookup-result.hot { border-left: 3px solid var(--accent); }
-  .lookup-result.warm { border-left: 3px solid var(--gold); }
-  .lookup-result.cold { border-left: 3px solid var(--border2); }
-
-  .lookup-score-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .lookup-biz-name { font-size: 18px; font-weight: 700; }
-  .lookup-score {
-    font-size: 28px;
-    font-weight: 700;
-  }
-  .lookup-score.hot { color: var(--accent); }
-  .lookup-score.warm { color: var(--gold); }
-  .lookup-score.cold { color: var(--muted); }
-  .score-label { font-size: 11px; color: var(--muted); text-align: right; text-transform: uppercase; letter-spacing: 0.07em; }
-
-  .lookup-breakdown {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .breakdown-pill {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-  .breakdown-pill .bp-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px; }
-  .breakdown-pill .bp-val { font-weight: 700; color: var(--ink); }
-
-  .lookup-insight {
-    background: var(--surface);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.6;
-    margin-bottom: 14px;
-  }
-  .lookup-insight strong { color: var(--accent); }
-
-  .lookup-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .modal h3 { font-family: Georgia, serif; margin-bottom: 16px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .chart-wrap { position: relative; height: 220px; margin-top: 16px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab { padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--muted); }
+  .tab.active { background: var(--surface2); color: var(--ink); }
+  .log-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .log-row:last-child { border-bottom: none; }
+  .close-x { cursor: pointer; color: var(--muted); font-size: 20px; float: right; }
 </style>
 </head>
 <body>
 
-<header>
-  <div>
-    <div class="logo">Brix<span>ly</span></div>
-    <div class="logo-sub">Client Prospector</div>
+<h1>Brix<span>ly</span> Client Tracker</h1>
+<p class="sub">Track review growth, taps/scans, and visit history per client</p>
+
+<div class="top-row" id="statsRow"></div>
+
+<div class="detail-panel" style="margin-bottom:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="font-size:16px; font-family:Georgia,serif;">MRR growth</h2>
   </div>
-  <div class="nav-tabs">
-    <div class="nav-tab active" data-view="prospectorView" onclick="switchView('prospectorView', this)">🔍 Prospector</div>
-    <div class="nav-tab" data-view="historyView" onclick="switchView('historyView', this)">📜 History</div>
-    <div class="nav-tab" data-view="savedView" onclick="switchView('savedView', this)">⭐ Saved</div>
-  </div>
-  <div style="font-size:12px;color:var(--muted);">San José, CA</div>
-</header>
-
-<main>
-
-  <!-- ===================== PROSPECTOR VIEW ===================== -->
-  <div class="view active" id="prospectorView">
-
-    <!-- LOOKUP PANEL -->
-    <div class="lookup-panel">
-      <div class="panel-title">Look Up a Specific Business</div>
-      <div class="lookup-row">
-        <div class="input-group">
-          <label>Business Name</label>
-          <input type="text" id="lookupInput" placeholder="e.g. El Toro Taqueria..." autocomplete="off" oninput="autocompleteSearch(this.value)" onkeydown="if(event.key==='Escape') closeDropdown()">
-        </div>
-        <button class="lookup-btn" id="lookupBtn" style="display:none">🔎 Rate It</button>
-      </div>
-
-      <!-- SEARCH RESULTS DROPDOWN -->
-      <div class="search-results-dropdown" id="searchDropdown"></div>
-
-      <!-- LOOKUP RESULT -->
-      <div class="lookup-result" id="lookupResult">
-        <div class="lookup-score-row">
-          <div>
-            <div class="lookup-biz-name" id="lrName"></div>
-            <div style="font-size:12px;color:var(--muted);margin-top:3px;" id="lrType"></div>
-          </div>
-          <div style="text-align:right;">
-            <div class="lookup-score" id="lrScore"></div>
-            <div class="score-label">Opportunity Score</div>
-            <div class="priority-badge" id="lrBadge" style="margin-top:4px;display:inline-block;"></div>
-          </div>
-        </div>
-        <div class="lookup-breakdown" id="lrBreakdown"></div>
-        <div class="lookup-insight" id="lrInsight"></div>
-        <div class="lookup-actions">
-          <button class="action-btn btn-pitch" onclick="lookupGetPitch()">📋 Get Pitch Script</button>
-          <button class="action-btn btn-maps" id="lrMapsBtn">🗺️ Maps</button>
-          <button class="action-btn btn-fav" id="lrFavBtn" onclick="lookupToggleFav()">☆ Save</button>
-          <button class="action-btn btn-done" onclick="lookupMarkClosed()">✅ Mark Closed</button>
-          <button class="action-btn btn-skip" onclick="lookupMarkSkipped()">⏭ Skip</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- SEARCH PANEL -->
-    <div class="search-panel">
-      <div class="panel-title">Find Target Businesses</div>
-
-      <div class="search-row">
-        <div class="input-group">
-          <label>ZIP Code</label>
-          <input type="text" id="zipInput" placeholder="95117" maxlength="5" value="95117">
-        </div>
-        <div class="input-group">
-          <label>Radius</label>
-          <select id="radiusInput">
-            <option value="1">1 mile</option>
-            <option value="2" selected>2 miles</option>
-            <option value="5">5 miles</option>
-            <option value="10">10 miles</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label>Language</label>
-          <select id="langInput">
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="both" selected>Both</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;">Business Type</div>
-      <div class="category-grid" id="categoryGrid">
-        <div class="cat-chip active" data-cat="restaurant">🌮 Restaurants</div>
-        <div class="cat-chip active" data-cat="salon">✂️ Salons</div>
-        <div class="cat-chip active" data-cat="barbershop">💈 Barbershops</div>
-        <div class="cat-chip active" data-cat="auto">🔧 Auto Shops</div>
-        <div class="cat-chip" data-cat="spa">💆 Spas</div>
-        <div class="cat-chip" data-cat="dental">🦷 Dental</div>
-        <div class="cat-chip" data-cat="gym">💪 Gyms</div>
-        <div class="cat-chip" data-cat="cleaning">🧹 Cleaning</div>
-        <div class="cat-chip" data-cat="cafe">☕ Cafes</div>
-        <div class="cat-chip" data-cat="retail">🛍️ Retail</div>
-      </div>
-
-      <div class="btn-row">
-        <button class="search-btn" id="searchBtn" onclick="runSearch()">
-          <span>🔍</span> Find Target Businesses
-        </button>
-        <button class="add-btn" onclick="openAddBusiness()">➕ Add Business</button>
-      </div>
-    </div>
-
-    <!-- LOADING -->
-    <div class="loading-state" id="loadingState">
-      <div class="spinner"></div>
-      <div class="loading-text">Scanning businesses in your area...</div>
-      <div class="loading-steps" id="loadingSteps">Analyzing review counts and ratings...</div>
-    </div>
-
-    <!-- STATS BAR -->
-    <div class="stats-bar hidden" id="statsBar">
-      <div class="stat-pill">
-        <span class="num" id="statTotal">0</span>
-        <span class="lbl">Businesses found</span>
-      </div>
-      <div class="stat-pill">
-        <span class="num" id="statHot" style="color:var(--accent)">0</span>
-        <span class="lbl">🔥 Hot targets</span>
-      </div>
-      <div class="stat-pill">
-        <span class="num" id="statWarm" style="color:var(--gold)">0</span>
-        <span class="lbl">⚡ Warm leads</span>
-      </div>
-      <div class="stat-pill">
-        <span class="num" id="statClosed" style="color:var(--green)">0</span>
-        <span class="lbl">✅ Closed</span>
-      </div>
-    </div>
-
-    <!-- TRACKER -->
-    <div class="tracker-bar hidden" id="trackerBar">
-      <span class="tracker-label">Your progress today</span>
-      <div class="tracker-counts">
-        <span class="tc visited">👣 <span id="tcVisited">0</span> visited</span>
-        <span class="tc closed">✅ <span id="tcClosed">0</span> closed</span>
-        <span class="tc skipped">⏭ <span id="tcSkipped">0</span> skipped</span>
-      </div>
-    </div>
-
-    <!-- RESULTS -->
-    <div id="resultsHeader" class="results-header hidden">
-      <div class="results-title">Showing <span id="resultCount">0</span> businesses — sorted by opportunity</div>
-      <select class="sort-select" onchange="sortResults(this.value)">
-        <option value="priority">Sort: Priority</option>
-        <option value="rating">Sort: Lowest rated first</option>
-        <option value="reviews">Sort: Fewest reviews first</option>
-      </select>
-    </div>
-
-    <div id="resultsContainer"></div>
-
-    <!-- EMPTY -->
-    <div class="empty-state hidden" id="emptyState">
-      <div class="empty-icon">🔍</div>
-      <div class="empty-title">Enter a ZIP code to start prospecting</div>
-      <div>Brixly will surface the best local businesses to approach — ranked by review opportunity. Or add one manually if you already found it in the field.</div>
-    </div>
-
-  </div>
-
-  <!-- ===================== SAVED VIEW ===================== -->
-  <div class="view" id="savedView">
-    <div class="history-header">
-      <div class="history-title">Saved Businesses</div>
-      <button class="clear-history-btn" onclick="clearFavs()">Clear All</button>
-    </div>
-    <div id="savedContainer"></div>
-    <div class="empty-state hidden" id="savedEmptyState">
-      <div class="empty-icon">⭐</div>
-      <div class="empty-title">No saved businesses yet</div>
-      <div>Hit the ☆ Save button on any business to save it here.</div>
-    </div>
-  </div>
-
-  <!-- ===================== HISTORY VIEW ===================== -->
-  <div class="view" id="historyView">
-    <div class="history-header">
-      <div class="history-title">Visit History</div>
-      <button class="clear-history-btn" onclick="clearHistory()">Clear History</button>
-    </div>
-    <div id="historyContainer"></div>
-    <div class="empty-state hidden" id="historyEmptyState">
-      <div class="empty-icon">📜</div>
-      <div class="empty-title">No visits logged yet</div>
-      <div>Mark businesses as Closed or Skipped in the Prospector tab and they'll show up here.</div>
-    </div>
-  </div>
-
-</main>
-
-<!-- PITCH MODAL -->
-<div class="modal-overlay" id="pitchModal">
-  <div class="modal">
-    <div class="modal-title" id="pitchBizName">Pitch Script</div>
-    <div class="modal-sub">Customized for this business — ready to use in person or over the phone</div>
-    <div class="pitch-block" id="pitchContent">Generating...</div>
-    <div class="modal-actions">
-      <button class="modal-close" onclick="closePitch()">Close</button>
-      <button class="modal-copy" onclick="copyPitch()">Copy Script</button>
-    </div>
+  <div class="chart-wrap" style="height:180px;">
+    <canvas id="mrrChart" role="img" aria-label="Line chart showing monthly recurring revenue growth over time"></canvas>
   </div>
 </div>
 
-<!-- ADD BUSINESS MODAL -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px; flex-wrap:wrap;">
+  <h2 style="font-size:16px;">Clients</h2>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <input type="text" id="clientSearch" placeholder="Search clients..." oninput="handleSearch()"
+      style="background:var(--surface2); border:1px solid var(--border); color:var(--ink); padding:8px 10px; border-radius:6px; font-size:13px;">
+    <button class="btn secondary small" onclick="exportData()">Backup</button>
+    <button class="btn secondary small" onclick="document.getElementById('importFile').click()">Restore</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importData(event)">
+    <button class="btn" onclick="openAddClientModal()">+ Add client</button>
+  </div>
+</div>
+
+<div class="client-list" id="clientList"></div>
+
+<div id="detailPanel"></div>
+
+<!-- Add Client Modal -->
 <div class="modal-overlay" id="addModal">
   <div class="modal">
-    <div class="modal-title">Add a Business</div>
-    <div class="modal-sub">Found one walking around? Add it manually and it'll show up in your list with a priority score.</div>
-
+    <span class="close-x" onclick="closeModal('addModal')">&times;</span>
+    <h3 id="clientModalTitle">Add new client</h3>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Business name</label>
+      <input type="text" id="newBizName" placeholder="Maria's Salon">
+    </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Business Name *</label>
-        <input type="text" id="addName" placeholder="La Villa Taqueria">
+        <label>Business type</label>
+        <input type="text" id="newBizType" placeholder="Salon">
+      </div>
+      <div class="form-group">
+        <label>Onboarded date</label>
+        <input type="date" id="newOnboardDate">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Type</label>
-        <select id="addType">
-          <option value="Restaurant / Taqueria">Restaurant / Taqueria</option>
-          <option value="Hair Salon">Hair Salon</option>
-          <option value="Barbershop">Barbershop</option>
-          <option value="Auto Shop / Detailer">Auto Shop / Detailer</option>
-          <option value="Spa / Wellness">Spa / Wellness</option>
-          <option value="Dental Office">Dental Office</option>
-          <option value="Gym / Fitness">Gym / Fitness</option>
-          <option value="Cleaning Service">Cleaning Service</option>
-          <option value="Cafe / Coffee Shop">Cafe / Coffee Shop</option>
-          <option value="Retail Store">Retail Store</option>
-          <option value="Other">Other</option>
+        <label>Starting review count</label>
+        <input type="number" id="newBaselineReviews" placeholder="25">
+      </div>
+      <div class="form-group">
+        <label>Monthly rate ($)</label>
+        <input type="number" id="newMonthlyRate" placeholder="149">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Short.io link slug</label>
+      <input type="text" id="newSlug" placeholder="mariasalon">
+    </div>
+    <button class="btn" id="clientModalBtn" style="width:100%;" onclick="addClient()">Add client</button>
+  </div>
+</div>
+
+<!-- Add Check-in Modal -->
+<div class="modal-overlay" id="checkinModal">
+  <div class="modal">
+    <span class="close-x" onclick="closeModal('checkinModal')">&times;</span>
+    <h3>Log monthly check-in</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Visit date</label>
+        <input type="date" id="ciDate">
+      </div>
+      <div class="form-group">
+        <label>Current review count</label>
+        <input type="number" id="ciReviews" placeholder="34">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Taps + scans this month</label>
+        <input type="number" id="ciTaps" placeholder="42">
+      </div>
+      <div class="form-group">
+        <label>Payment status</label>
+        <select id="ciPayment">
+          <option value="paid">Paid</option>
+          <option value="due">Due</option>
+          <option value="overdue">Overdue</option>
         </select>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Address</label>
-        <input type="text" id="addAddress" placeholder="1234 Stevens Creek Blvd, San José, CA">
-      </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Notes (optional)</label>
+      <input type="text" id="ciNotes" placeholder="Uploaded 5 new photos, GBP looking good">
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Phone</label>
-        <input type="text" id="addPhone" placeholder="408-555-1234">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Current Rating (0–5)</label>
-        <input type="number" id="addRating" placeholder="3.9" min="0" max="5" step="0.1">
-      </div>
-      <div class="form-group">
-        <label># of Reviews</label>
-        <input type="number" id="addReviews" placeholder="34" min="0">
-      </div>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="addSpanish">
-      <label for="addSpanish" style="margin:0;text-transform:none;font-weight:400;">Spanish-speaking owned business</label>
-    </div>
-
-    <div class="modal-actions">
-      <button class="modal-close" onclick="closeAddBusiness()">Cancel</button>
-      <button class="modal-submit" onclick="submitAddBusiness()">Add to List</button>
-    </div>
+    <button class="btn" style="width:100%;" onclick="saveCheckin()">Save check-in</button>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+let clients = [];
+let selectedClientId = null;
+let chartInstance = null;
+let mrrChartInstance = null;
+let editingClientId = null;
+let searchQuery = '';
 
-// ---------- FAVOURITES ----------
-const FAVS_KEY = 'brixly_favs';
-function getFavs() { try { return JSON.parse(localStorage.getItem(FAVS_KEY) || '[]'); } catch { return []; } }
-function saveFavs(list) { localStorage.setItem(FAVS_KEY, JSON.stringify(list)); }
-
-function toggleFav(idx) {
-  const biz = businesses[idx];
-  let favs = getFavs();
-  const exists = favs.findIndex(f => f.name === biz.name);
-  if (exists >= 0) { favs.splice(exists, 1); } else { favs.unshift({ ...biz, savedAt: new Date().toISOString() }); }
-  saveFavs(favs);
-  const btn = document.getElementById('fav-' + idx);
-  if (btn) { const nowFaved = getFavs().some(f => f.name === biz.name); btn.textContent = nowFaved ? '⭐ Saved' : '☆ Save'; btn.classList.toggle('starred', nowFaved); }
-}
-
-function lookupToggleFav() {
-  if (!lookupBizData) return;
-  let favs = getFavs();
-  const exists = favs.findIndex(f => f.name === lookupBizData.name);
-  if (exists >= 0) { favs.splice(exists, 1); } else { favs.unshift({ ...lookupBizData, savedAt: new Date().toISOString() }); }
-  saveFavs(favs);
-  const btn = document.getElementById('lrFavBtn');
-  const nowFaved = getFavs().some(f => f.name === lookupBizData.name);
-  btn.textContent = nowFaved ? '⭐ Saved' : '☆ Save';
-  btn.classList.toggle('starred', nowFaved);
-}
-
-function removeFav(idx) { const favs = getFavs(); favs.splice(idx, 1); saveFavs(favs); renderSaved(); }
-function clearFavs() { if (!confirm('Clear all saved businesses?')) return; saveFavs([]); renderSaved(); }
-
-function renderSaved() {
-  const favs = getFavs();
-  const container = document.getElementById('savedContainer');
-  const empty = document.getElementById('savedEmptyState');
-  container.innerHTML = '';
-  if (favs.length === 0) { empty.classList.remove('hidden'); return; }
-  empty.classList.add('hidden');
-  favs.forEach((biz, i) => {
-    const item = document.createElement('div');
-    item.className = 'history-item';
-    item.style.borderLeft = '3px solid var(--gold)';
-    const d = new Date(biz.savedAt);
-    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    item.innerHTML = '<div><div class="hist-name">' + biz.name + '</div><div class="hist-meta">' + (biz.type||'') + ' · ' + (biz.address||'') + '</div><div class="hist-meta" style="margin-top:4px;">⭐ ' + (biz.rating||0) + ' · ' + (biz.reviewCount||0) + ' reviews · Score: ' + (biz.priorityScore||0) + '/100</div></div><div style="display:flex;align-items:center;gap:10px;"><span class="hist-date">' + dateStr + '</span><button class="action-btn btn-skip" style="font-size:11px;padding:5px 10px;" onclick="removeFav(' + i + ')">Remove</button></div>';
-    container.appendChild(item);
-  });
-}
-// ---------- END FAVOURITES ----------
-
-// State
-let businesses = [];
-let stats = { total: 0, hot: 0, warm: 0, closed: 0, visited: 0, skipped: 0 };
-let selectedCategories = ['restaurant', 'salon', 'barbershop', 'auto'];
-let currentPitch = '';
-
-
-
-const HISTORY_KEY = 'brixly_history_log';
-
-// ---------- NAV ----------
-function switchView(viewId, el) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(viewId).classList.remove('hidden');
-  document.getElementById(viewId).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  if (viewId === 'historyView') renderHistory();
-  if (viewId === 'savedView') renderSaved();
-}
-
-// Category chips
-document.querySelectorAll('.cat-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    const cat = chip.dataset.cat;
-    chip.classList.toggle('active');
-    if (chip.classList.contains('active')) {
-      selectedCategories.push(cat);
-    } else {
-      selectedCategories = selectedCategories.filter(c => c !== cat);
-    }
-  });
-});
-
-// Category labels
-const catLabels = {
-  restaurant: 'Restaurant / Taqueria',
-  salon: 'Hair Salon',
-  barbershop: 'Barbershop',
-  auto: 'Auto Shop / Detailer',
-  spa: 'Spa / Wellness',
-  dental: 'Dental Office',
-  gym: 'Gym / Fitness',
-  cleaning: 'Cleaning Service',
-  cafe: 'Cafe / Coffee Shop',
-  retail: 'Retail Store'
-};
-
-async function runSearch() {
-  const zip = document.getElementById('zipInput').value.trim();
-  if (!zip || zip.length < 5) { alert('Enter a valid ZIP code'); return; }
-  if (selectedCategories.length === 0) { alert('Select at least one business type'); return; }
-
-  const btn = document.getElementById('searchBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span>⏳</span> Scanning...';
-
-  document.getElementById('loadingState').classList.add('show');
-  document.getElementById('statsBar').classList.add('hidden');
-  document.getElementById('trackerBar').classList.add('hidden');
-  document.getElementById('resultsHeader').classList.add('hidden');
-  document.getElementById('resultsContainer').innerHTML = '';
-  document.getElementById('emptyState').classList.add('hidden');
-
-  const steps = [
-    'Scanning Google Maps data...',
-    'Analyzing review counts and ratings...',
-    'Identifying low-review businesses...',
-    'Ranking by opportunity score...',
-    'Generating pitch insights...'
-  ];
-  let stepIdx = 0;
-  const stepInterval = setInterval(() => {
-    if (stepIdx < steps.length) {
-      document.getElementById('loadingSteps').textContent = steps[stepIdx++];
-    }
-  }, 800);
-
+async function loadData() {
   try {
-    const lang = document.getElementById('langInput').value;
-    const radius = document.getElementById('radiusInput').value;
-    const cats = selectedCategories.map(c => catLabels[c]).join(', ');
-
-    const prompt = `You are a local business intelligence tool for Brixly, a San José CA company that sells Google review management packages to local businesses.
-
-Generate a realistic list of 12 local businesses near ZIP code ${zip} in the San José, CA area (${radius} mile radius) that would be ideal prospects for Brixly's Google review management service.
-
-Business types to include: ${cats}
-${lang === 'es' ? 'Focus on Spanish-speaking owned businesses.' : lang === 'both' ? 'Include a mix of English and Spanish-speaking owned businesses.' : 'Focus on English-speaking businesses.'}
-
-For each business, create realistic data. Return ONLY a JSON array, no other text:
-[
-  {
-    "name": "Business Name",
-    "type": "Restaurant",
-    "address": "1234 Street Name, San José, CA ${zip}",
-    "phone": "408-555-XXXX",
-    "rating": 3.8,
-    "reviewCount": 23,
-    "monthsOnGoogle": 18,
-    "spanishOwned": false,
-    "priorityScore": 95,
-    "priority": "hot",
-    "insight": "Only 23 reviews in 18 months despite being busy. Rating below 4.0 means they're invisible in local search. A review stand at the register would collect reviews passively.",
-    "opportunity": "Low review count + sub-4.0 rating = highest opportunity",
-    "walkInTime": "Tuesday-Thursday 2-4pm (slow period)"
+    const raw = localStorage.getItem('brixly_clients');
+    clients = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    clients = [];
   }
-]
-
-Priority scoring rules:
-- "hot" (score 80-100): Under 50 reviews OR rating under 4.0 — urgent need
-- "warm" (score 50-79): 50-150 reviews AND rating 4.0-4.3 — good opportunity  
-- "cold" (score 20-49): 150+ reviews AND rating above 4.3 — lower priority
-
-Make the data feel realistic for San José's actual business landscape. Include some Spanish business names. Make the insights sharp and specific — reference the actual numbers in the insight.`;
-
-    const response = await fetch('/.netlify/functions/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    const text = data.content[0].text;
-    // Extract JSON array from response, handling markdown fences
-    const jsonMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
-    const clean = jsonMatch ? jsonMatch[0] : text.replace(/```json/g, '').replace(/```/g, '').trim();
-    businesses = JSON.parse(clean);
-
-    clearInterval(stepInterval);
-    renderResults();
-
-  } catch (err) {
-    clearInterval(stepInterval);
-    console.error(err);
-    document.getElementById('loadingState').classList.remove('show');
-    document.getElementById('resultsContainer').innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);font-size:13px;white-space:pre-wrap;">ERROR: ${err.message}\n\n${err.stack || ''}</div>`;
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '<span>🔍</span> Find Target Businesses';
+  render();
 }
 
-function renderResults() {
-  document.getElementById('loadingState').classList.remove('show');
-
-  // Stats
-  stats.total = businesses.length;
-  stats.hot = businesses.filter(b => b.priority === 'hot').length;
-  stats.warm = businesses.filter(b => b.priority === 'warm').length;
-
-  document.getElementById('statTotal').textContent = stats.total;
-  document.getElementById('statHot').textContent = stats.hot;
-  document.getElementById('statWarm').textContent = stats.warm;
-  document.getElementById('statClosed').textContent = stats.closed || 0;
-
-  document.getElementById('statsBar').classList.remove('hidden');
-  document.getElementById('trackerBar').classList.remove('hidden');
-  document.getElementById('resultsHeader').classList.remove('hidden');
-  document.getElementById('resultCount').textContent = businesses.length;
-  document.getElementById('emptyState').classList.add('hidden');
-
-  renderCards(businesses);
-}
-
-function renderCards(list) {
-  const container = document.getElementById('resultsContainer');
-  container.innerHTML = '';
-
-  list.forEach((biz, idx) => {
-    const isDone = biz._status === 'closed';
-
-    const stars = '★'.repeat(Math.floor(biz.rating)) + (biz.rating % 1 >= 0.5 ? '½' : '') + '☆'.repeat(5 - Math.ceil(biz.rating));
-
-    const favs = getFavs();
-    const isFaved = favs.some(f => f.name === biz.name);
-    const card = document.createElement('div');
-    card.className = `business-card ${biz.priority}`;
-    card.id = `card-${idx}`;
-    if (isDone) card.style.opacity = '0.5';
-
-    card.innerHTML = `
-      <div class="card-top">
-        <div>
-          <div class="biz-name">${biz.name}${biz.spanishOwned ? ' 🇲🇽' : ''}</div>
-          <div class="biz-type">${biz.type} · ${biz.address}</div>
-        </div>
-        <div class="priority-badge ${biz.priority}">
-          ${biz.priority === 'hot' ? '🔥 Hot' : biz.priority === 'warm' ? '⚡ Warm' : '❄️ Cold'}
-        </div>
-      </div>
-      <div class="card-metrics">
-        <div class="metric"><span class="stars">${stars}</span> <strong>${biz.rating}</strong> stars</div>
-        <div class="metric">📝 <strong>${biz.reviewCount}</strong> reviews</div>
-        ${biz.monthsOnGoogle ? `<div class="metric">📅 <strong>${biz.monthsOnGoogle}</strong> mo on Google</div>` : ''}
-        ${biz.phone ? `<div class="metric">📞 <strong>${biz.phone}</strong></div>` : ''}
-      </div>
-      <div class="card-insight">💡 <strong>Opportunity:</strong> ${biz.insight}</div>
-      ${biz.walkInTime ? `<div class="card-insight" style="background:transparent;padding:4px 0;margin-bottom:8px;font-size:12px;">
-        🕐 Best time to walk in: <strong style="color:var(--ink);">${biz.walkInTime}</strong>
-      </div>` : ''}
-      <div class="card-actions">
-        <button class="action-btn btn-pitch" onclick="showPitch(${idx})">📋 Get Pitch Script</button>
-        <button class="action-btn btn-maps" onclick="openMaps('${encodeURIComponent(biz.name + ' ' + biz.address)}')">🗺️ Maps</button>
-        ${biz.phone ? `<button class="action-btn btn-call" onclick="callBiz('${biz.phone}')">📞 Call</button>` : ''}
-        <button class="action-btn btn-fav ${isFaved ? 'starred' : ''}" onclick="toggleFav(${idx})" id="fav-${idx}">${isFaved ? '⭐ Saved' : '☆ Save'}</button>
-        <button class="action-btn btn-done" onclick="markStatus(${idx}, 'closed')">✅ Closed</button>
-        <button class="action-btn btn-skip" onclick="markStatus(${idx}, 'skipped')">⏭ Skip</button>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function markStatus(idx, status) {
-  const biz = businesses[idx];
-  biz._status = status;
-
-  if (status === 'closed') {
-    stats.closed = (stats.closed || 0) + 1;
-    stats.visited = (stats.visited || 0) + 1;
-    document.getElementById('tcClosed').textContent = stats.closed;
-    document.getElementById('tcVisited').textContent = stats.visited;
-    document.getElementById('statClosed').textContent = stats.closed;
-  } else if (status === 'skipped') {
-    stats.skipped = (stats.skipped || 0) + 1;
-    stats.visited = (stats.visited || 0) + 1;
-    document.getElementById('tcSkipped').textContent = stats.skipped;
-    document.getElementById('tcVisited').textContent = stats.visited;
-  }
-  const card = document.getElementById(`card-${idx}`);
-  if (card) card.style.opacity = '0.4';
-
-  recordHistory(biz, status);
-}
-
-function openMaps(query) {
-  window.open(`https://www.google.com/maps/search/${query}`, '_blank');
-}
-
-function callBiz(phone) {
-  window.location.href = `tel:${phone}`;
-}
-
-async function showPitch(idx) {
-  const biz = businesses[idx];
-  document.getElementById('pitchBizName').textContent = `Pitch — ${biz.name}`;
-  document.getElementById('pitchContent').textContent = 'Generating your custom pitch...';
-  document.getElementById('pitchModal').classList.add('open');
-
+async function saveData() {
   try {
-    const response = await fetch('/.netlify/functions/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 800,
-        messages: [{
-          role: 'user',
-          content: `Write a short, natural in-person sales pitch for Moses from Brixly to use when walking into ${biz.name}, a ${biz.type} in San José CA.
-
-Business context:
-- Current rating: ${biz.rating} stars
-- Current reviews: ${biz.reviewCount}
-- Spanish-owned: ${biz.spanishOwned}
-
-Brixly's offer: $99 setup + $149/month includes NFC review stand, badge reel for staff, Google profile optimization, AI review responses within 24hrs, monthly photo uploads, monthly growth report.
-
-Write a 3-part pitch:
-1. OPENER (1-2 sentences — get their attention, reference their specific situation)
-2. THE PITCH (2-3 sentences — what Brixly does, make it tangible)
-3. THE CLOSE (1-2 sentences — low pressure ask)
-
-${biz.spanishOwned ? 'Include a Spanish version below the English version.' : ''}
-
-Keep it conversational. Moses is 19, local, bilingual. No corporate language. Sound like a real person.
-
-Format:
-OPENER:
-[text]
-
-THE PITCH:
-[text]
-
-THE CLOSE:
-[text]
-${biz.spanishOwned ? '\nEN ESPAÑOL:\n[Spanish version]' : ''}`
-        }]
-      })
-    });
-
-    const data = await response.json();
-    currentPitch = data.content[0].text;
-    document.getElementById('pitchContent').textContent = currentPitch;
-  } catch (err) {
-    document.getElementById('pitchContent').textContent = 'Error generating pitch. Try again.';
+    localStorage.setItem('brixly_clients', JSON.stringify(clients));
+  } catch (e) {
+    console.error('Save failed', e);
   }
 }
 
-function closePitch() {
-  document.getElementById('pitchModal').classList.remove('open');
+function uid() { return 'c_' + Date.now() + '_' + Math.floor(Math.random()*1000); }
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(clients, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `brixly-clients-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
-function copyPitch() {
-  navigator.clipboard.writeText(currentPitch).then(() => {
-    const btn = document.querySelector('.modal-copy');
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy Script', 2000);
-  });
-}
-
-function sortResults(by) {
-  let sorted = [...businesses];
-  if (by === 'rating') sorted.sort((a, b) => a.rating - b.rating);
-  else if (by === 'reviews') sorted.sort((a, b) => a.reviewCount - b.reviewCount);
-  else sorted.sort((a, b) => b.priorityScore - a.priorityScore);
-  renderCards(sorted);
-}
-
-// ---------- ADD BUSINESS MANUALLY ----------
-function openAddBusiness() {
-  document.getElementById('addModal').classList.add('open');
-}
-function closeAddBusiness() {
-  document.getElementById('addModal').classList.remove('open');
-  ['addName','addAddress','addPhone','addRating','addReviews'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('addSpanish').checked = false;
-}
-
-function calcPriority(rating, reviewCount) {
-  if (reviewCount < 50 || rating < 4.0) return { priority: 'hot', score: 90 };
-  if (reviewCount <= 150 && rating >= 4.0 && rating <= 4.3) return { priority: 'warm', score: 60 };
-  return { priority: 'cold', score: 30 };
-}
-
-function submitAddBusiness() {
-  const name = document.getElementById('addName').value.trim();
-  if (!name) { alert('Business name is required'); return; }
-
-  const type = document.getElementById('addType').value;
-  const address = document.getElementById('addAddress').value.trim() || 'San José, CA';
-  const phone = document.getElementById('addPhone').value.trim();
-  const rating = parseFloat(document.getElementById('addRating').value) || 0;
-  const reviewCount = parseInt(document.getElementById('addReviews').value) || 0;
-  const spanishOwned = document.getElementById('addSpanish').checked;
-
-  const { priority, score } = calcPriority(rating, reviewCount);
-  const insight = `${reviewCount} reviews on Google${rating ? ` with a ${rating}★ rating` : ''}. Added manually from the field — verify details before pitching.`;
-
-  const biz = {
-    name, type, address, phone,
-    rating: rating || 0,
-    reviewCount: reviewCount || 0,
-    monthsOnGoogle: null,
-    spanishOwned,
-    priorityScore: score,
-    priority,
-    insight,
-    walkInTime: null
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!Array.isArray(imported)) throw new Error('Invalid file format');
+      const doMerge = clients.length > 0 && confirm(
+        'You already have clients saved. Click OK to MERGE the backup with existing clients, or Cancel to REPLACE existing clients with the backup.'
+      );
+      if (doMerge) {
+        const existingIds = new Set(clients.map(c => c.id));
+        imported.forEach(c => { if (!existingIds.has(c.id)) clients.push(c); });
+      } else {
+        clients = imported;
+      }
+      await saveData();
+      render();
+      if (selectedClientId && !clients.find(c => c.id === selectedClientId)) {
+        selectedClientId = null;
+        document.getElementById('detailPanel').innerHTML = '';
+      }
+      alert('Backup restored successfully.');
+    } catch (err) {
+      alert('Could not read that file. Make sure it\'s a Brixly backup JSON file.');
+    }
+    event.target.value = '';
   };
-
-  businesses.unshift(biz);
-  closeAddBusiness();
-  renderResults();
-  switchView('prospectorView', document.querySelector('.nav-tab[data-view="prospectorView"]'));
+  reader.readAsText(file);
 }
 
-// ---------- HISTORY ----------
-function loadHistory() {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-  } catch (e) { return []; }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openAddClientModal() {
+  editingClientId = null;
+  document.getElementById('clientModalTitle').textContent = 'Add new client';
+  document.getElementById('clientModalBtn').textContent = 'Add client';
+  document.getElementById('newBizName').value = '';
+  document.getElementById('newBizType').value = '';
+  document.getElementById('newOnboardDate').value = '';
+  document.getElementById('newBaselineReviews').value = '';
+  document.getElementById('newMonthlyRate').value = '';
+  document.getElementById('newSlug').value = '';
+  openModal('addModal');
 }
 
-function saveHistory(list) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+function openEditClientModal(clientId, event) {
+  if (event) event.stopPropagation();
+  const client = clients.find(c => c.id === clientId);
+  if (!client) return;
+  editingClientId = clientId;
+  document.getElementById('clientModalTitle').textContent = 'Edit client';
+  document.getElementById('clientModalBtn').textContent = 'Save changes';
+  document.getElementById('newBizName').value = client.name;
+  document.getElementById('newBizType').value = client.type;
+  document.getElementById('newOnboardDate').value = client.onboardDate;
+  document.getElementById('newBaselineReviews').value = client.baselineReviews;
+  document.getElementById('newMonthlyRate').value = client.monthlyRate;
+  document.getElementById('newSlug').value = client.slug;
+  openModal('addModal');
 }
 
-function recordHistory(biz, status) {
-  let history = loadHistory();
-  // remove any existing entry for this business name to avoid duplicates, keep latest
-  history = history.filter(h => h.name !== biz.name);
-  history.unshift({
-    name: biz.name,
-    type: biz.type,
-    address: biz.address,
-    status: status,
-    date: new Date().toISOString()
-  });
-  saveHistory(history);
-}
+async function addClient() {
+  const name = document.getElementById('newBizName').value.trim();
+  if (!name) return;
 
-function renderSaved() {
-  const favs = getFavs();
-  const container = document.getElementById('savedContainer');
-  const empty = document.getElementById('savedEmptyState');
-  container.innerHTML = '';
-
-  if (favs.length === 0) {
-    empty.classList.remove('hidden');
-    return;
-  }
-  empty.classList.add('hidden');
-
-  favs.forEach((biz, i) => {
-    const item = document.createElement('div');
-    item.className = `history-item`;
-    item.style.borderLeft = `3px solid var(--gold)`;
-    const d = new Date(biz.savedAt);
-    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    item.innerHTML = `
-      <div>
-        <div class="hist-name">${biz.name}</div>
-        <div class="hist-meta">${biz.type || ''} · ${biz.address || ''}</div>
-        <div class="hist-meta" style="margin-top:4px;">⭐ ${biz.rating || 0} · ${biz.reviewCount || 0} reviews · Score: ${biz.priorityScore || 0}/100</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="hist-date">${dateStr}</span>
-        <button class="action-btn btn-skip" style="font-size:11px;padding:5px 10px;" onclick="removeFav(${i})">Remove</button>
-      </div>
-    `;
-    container.appendChild(item);
-  });
-}
-
-function removeFav(idx) {
-  const favs = getFavs();
-  favs.splice(idx, 1);
-  saveFavs(favs);
-  renderSaved();
-}
-
-function clearFavs() {
-  if (!confirm('Clear all saved businesses?')) return;
-  saveFavs([]);
-  renderSaved();
-}
-
-function renderHistory() {
-  const history = loadHistory();
-  const container = document.getElementById('historyContainer');
-  const empty = document.getElementById('historyEmptyState');
-  container.innerHTML = '';
-
-  if (history.length === 0) {
-    empty.classList.remove('hidden');
-    return;
-  }
-  empty.classList.add('hidden');
-
-  history.forEach(h => {
-    const d = new Date(h.date);
-    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-
-    const item = document.createElement('div');
-    item.className = `history-item ${h.status}`;
-    item.innerHTML = `
-      <div>
-        <div class="hist-name">${h.name}</div>
-        <div class="hist-meta">${h.type || ''}${h.address ? ' · ' + h.address : ''}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span class="hist-date">${dateStr} · ${timeStr}</span>
-        <span class="hist-status ${h.status}">${h.status === 'closed' ? '✅ Closed' : '⏭ Skipped'}</span>
-      </div>
-    `;
-    container.appendChild(item);
-  });
-}
-
-function clearHistory() {
-  if (!confirm('Clear all visit history? This cannot be undone.')) return;
-  saveHistory([]);
-  renderHistory();
-}
-
-// ---------- LOOKUP SPECIFIC BUSINESS ----------
-let lookupBizData = null;
-
-let autocompleteTimer = null;
-let selectedPlaceData = null;
-
-function autocompleteSearch(val) {
-  const dropdown = document.getElementById('searchDropdown');
-  if (val.length < 2) {
-    dropdown.classList.remove('show');
-    dropdown.innerHTML = '';
-    return;
-  }
-  clearTimeout(autocompleteTimer);
-  autocompleteTimer = setTimeout(() => fetchAutocomplete(val), 350);
-}
-
-function closeDropdown() {
-  document.getElementById('searchDropdown').classList.remove('show');
-}
-
-async function fetchAutocomplete(query) {
-  const dropdown = document.getElementById('searchDropdown');
-  dropdown.innerHTML = '<div class="search-result-item"><div class="sri-meta">Searching...</div></div>';
-  dropdown.classList.add('show');
-
-  try {
-    const res = await fetch('/.netlify/functions/places', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: query + ' San José CA' })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-
-    const results = data.results || [];
-    dropdown.innerHTML = '';
-
-    if (results.length === 0) {
-      dropdown.innerHTML = '<div class="search-result-item"><div class="sri-meta">No results found</div></div>';
-      return;
+  if (editingClientId) {
+    const client = clients.find(c => c.id === editingClientId);
+    if (client) {
+      client.name = name;
+      client.type = document.getElementById('newBizType').value.trim() || 'Business';
+      client.onboardDate = document.getElementById('newOnboardDate').value || client.onboardDate;
+      client.baselineReviews = parseInt(document.getElementById('newBaselineReviews').value) || 0;
+      client.monthlyRate = parseInt(document.getElementById('newMonthlyRate').value) || 149;
+      client.slug = document.getElementById('newSlug').value.trim();
     }
-
-    results.forEach(r => {
-      const item = document.createElement('div');
-      item.className = 'search-result-item';
-      item.innerHTML = `
-        <div class="sri-name">${r.name}</div>
-        <div class="sri-meta">${r.address}</div>
-        <div class="sri-rating">${r.rating ? '⭐ ' + r.rating + ' · ' + r.reviewCount.toLocaleString() + ' reviews' : 'No reviews yet'}</div>
-      `;
-      item.onclick = () => selectBusiness(r);
-      dropdown.appendChild(item);
-    });
-
-  } catch (err) {
-    dropdown.innerHTML = `<div class="search-result-item"><div class="sri-meta" style="color:var(--red)">Error: ${err.message}</div></div>`;
+    editingClientId = null;
+  } else {
+    const client = {
+      id: uid(),
+      name: name,
+      type: document.getElementById('newBizType').value.trim() || 'Business',
+      onboardDate: document.getElementById('newOnboardDate').value || new Date().toISOString().split('T')[0],
+      baselineReviews: parseInt(document.getElementById('newBaselineReviews').value) || 0,
+      monthlyRate: parseInt(document.getElementById('newMonthlyRate').value) || 149,
+      slug: document.getElementById('newSlug').value.trim(),
+      checkins: []
+    };
+    clients.push(client);
   }
+
+  await saveData();
+  closeModal('addModal');
+  document.getElementById('newBizName').value = '';
+  document.getElementById('newBizType').value = '';
+  document.getElementById('newOnboardDate').value = '';
+  document.getElementById('newBaselineReviews').value = '';
+  document.getElementById('newMonthlyRate').value = '';
+  document.getElementById('newSlug').value = '';
+  render();
+  if (selectedClientId) showDetail(selectedClientId);
 }
 
-async function selectBusiness(place) {
-  document.getElementById('searchDropdown').classList.remove('show');
-  document.getElementById('lookupInput').value = place.name;
-
-  const resultEl = document.getElementById('lookupResult');
-  resultEl.className = 'lookup-result show';
-  document.getElementById('lrName').textContent = place.name;
-  document.getElementById('lrType').textContent = place.type + (place.address ? ' · ' + place.address : '');
-  document.getElementById('lrScore').textContent = '...';
-  document.getElementById('lrBadge').textContent = '';
-  document.getElementById('lrBreakdown').innerHTML = '';
-  document.getElementById('lrInsight').innerHTML = '<em style="color:var(--muted)">Analyzing with real data...</em>';
-
-  const rating = place.rating || 0;
-  const reviews = place.reviewCount || 0;
-  const gap = Math.max(0, 100 - reviews);
-  const priority = reviews < 50 || rating < 4.0 ? 'hot' : (reviews <= 150 && rating <= 4.3 ? 'warm' : 'cold');
-  const score = priority === 'hot' ? 85 : (priority === 'warm' ? 60 : 30);
-
-  const promptText = [
-    'You are a Brixly sales analyst. Brixly sells Google review management ($99 setup + $149/month).',
-    '',
-    'REAL Google data:',
-    'Name: ' + place.name,
-    'Type: ' + place.type,
-    'Address: ' + place.address,
-    'Rating: ' + rating + ' stars',
-    'Reviews: ' + reviews,
-    '',
-    'Return ONLY valid JSON (no markdown fences):',
-    '{',
-    '  "name": "' + place.name.replace(/"/g, "'") + '",',
-    '  "type": "' + place.type + '",',
-    '  "address": "' + place.address.replace(/"/g, "'") + '",',
-    '  "phone": "' + (place.phone || '') + '",',
-    '  "rating": ' + rating + ',',
-    '  "reviewCount": ' + reviews + ',',
-    '  "monthsOnGoogle": 24,',
-    '  "spanishOwned": false,',
-    '  "priorityScore": ' + score + ',',
-    '  "priority": "' + priority + '",',
-    '  "insight": "Write 2-3 sharp sentences explaining why this business with ' + rating + ' stars and ' + reviews + ' reviews is or is not a good Brixly prospect.",',
-    '  "walkInTime": "Best time to walk in for this business type",',
-    '  "reviewGap": ' + gap + ',',
-    '  "competitorAvg": "Estimated average reviews for similar local businesses"',
-    '}'
-  ].join('\n');
-
-  try {
-    const response = await fetch('/.netlify/functions/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: promptText }]
-      })
-    });
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    const text = data.content[0].text;
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    const clean = jsonMatch ? jsonMatch[0] : text.replace(/```json/g,'').replace(/```/g,'').trim();
-    lookupBizData = JSON.parse(clean);
-    renderLookupResult(lookupBizData);
-
-  } catch (err) {
-    console.error(err);
-    document.getElementById('lrInsight').innerHTML = '<em style="color:var(--red)">Error: ' + err.message + '</em>';
-  }
+function openCheckinModal(clientId) {
+  selectedClientId = clientId;
+  document.getElementById('ciDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('ciReviews').value = '';
+  document.getElementById('ciTaps').value = '';
+  document.getElementById('ciNotes').value = '';
+  openModal('checkinModal');
 }
 
+async function saveCheckin() {
+  const client = clients.find(c => c.id === selectedClientId);
+  if (!client) return;
+  const checkin = {
+    date: document.getElementById('ciDate').value,
+    reviews: parseInt(document.getElementById('ciReviews').value) || 0,
+    taps: parseInt(document.getElementById('ciTaps').value) || 0,
+    payment: document.getElementById('ciPayment').value,
+    notes: document.getElementById('ciNotes').value.trim()
+  };
+  client.checkins.push(checkin);
+  client.checkins.sort((a,b) => new Date(a.date) - new Date(b.date));
+  await saveData();
+  closeModal('checkinModal');
+  render();
+  showDetail(selectedClientId);
+}
 
-function renderLookupResult(biz) {
-  const resultEl = document.getElementById('lookupResult');
-  resultEl.className = `lookup-result show ${biz.priority}`;
+async function deleteClient(clientId, event) {
+  event.stopPropagation();
+  if (!confirm('Remove this client? This cannot be undone.')) return;
+  clients = clients.filter(c => c.id !== clientId);
+  if (selectedClientId === clientId) {
+    selectedClientId = null;
+    document.getElementById('detailPanel').innerHTML = '';
+  }
+  await saveData();
+  render();
+}
 
-  document.getElementById('lrName').textContent = biz.name + (biz.spanishOwned ? ' 🇲🇽' : '');
-  document.getElementById('lrType').textContent = biz.type + (biz.address ? ' · ' + biz.address : '');
+function latestCheckin(client) {
+  return client.checkins.length ? client.checkins[client.checkins.length - 1] : null;
+}
 
-  const scoreEl = document.getElementById('lrScore');
-  scoreEl.textContent = biz.priorityScore + '/100';
-  scoreEl.className = `lookup-score ${biz.priority}`;
+function daysSinceLastActivity(client) {
+  const last = latestCheckin(client);
+  const refDate = last ? last.date : client.onboardDate;
+  if (!refDate) return null;
+  const diffMs = new Date().setHours(0,0,0,0) - new Date(refDate + 'T00:00:00').getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
 
-  const badge = document.getElementById('lrBadge');
-  badge.className = `priority-badge ${biz.priority}`;
-  badge.textContent = biz.priority === 'hot' ? '🔥 Hot Target' : biz.priority === 'warm' ? '⚡ Warm Lead' : '❄️ Cold';
+function isOverdueForCheckin(client) {
+  const days = daysSinceLastActivity(client);
+  return days !== null && days >= 30;
+}
 
-  const breakdown = document.getElementById('lrBreakdown');
-  breakdown.innerHTML = `
-    <div class="breakdown-pill"><span class="bp-label">Rating</span><span class="bp-val">${biz.rating}★</span></div>
-    <div class="breakdown-pill"><span class="bp-label">Reviews</span><span class="bp-val">${biz.reviewCount}</span></div>
-    <div class="breakdown-pill"><span class="bp-label">On Google</span><span class="bp-val">${biz.monthsOnGoogle} mo</span></div>
-    ${biz.reviewGap ? `<div class="breakdown-pill"><span class="bp-label">Gap to 100</span><span class="bp-val">+${biz.reviewGap}</span></div>` : ''}
-    ${biz.competitorAvg ? `<div class="breakdown-pill"><span class="bp-label">Area Avg</span><span class="bp-val">${biz.competitorAvg}</span></div>` : ''}
-    ${biz.walkInTime ? `<div class="breakdown-pill"><span class="bp-label">Best Time</span><span class="bp-val">${biz.walkInTime}</span></div>` : ''}
+function currentReviews(client) {
+  const last = latestCheckin(client);
+  return last ? last.reviews : client.baselineReviews;
+}
+
+function reviewGrowth(client) {
+  return currentReviews(client) - client.baselineReviews;
+}
+
+function totalTaps(client) {
+  return client.checkins.reduce((sum, c) => sum + (c.taps || 0), 0);
+}
+
+function renderStats() {
+  const totalClients = clients.length;
+  const totalGrowth = clients.reduce((sum, c) => sum + reviewGrowth(c), 0);
+  const totalTapsAll = clients.reduce((sum, c) => sum + totalTaps(c), 0);
+  const mrr = clients.reduce((sum, c) => sum + (c.monthlyRate || 0), 0);
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card">
+      <div class="label">Clients</div>
+      <div class="value">${totalClients}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Reviews gained</div>
+      <div class="value gold">+${totalGrowth}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Total taps/scans</div>
+      <div class="value green">${totalTapsAll}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Monthly revenue</div>
+      <div class="value">$${mrr}</div>
+    </div>
+  `;
+}
+
+function handleSearch() {
+  searchQuery = document.getElementById('clientSearch').value.trim().toLowerCase();
+  renderClientList();
+}
+
+function renderClientList() {
+  const listEl = document.getElementById('clientList');
+  const filtered = searchQuery
+    ? clients.filter(c => c.name.toLowerCase().includes(searchQuery) || c.type.toLowerCase().includes(searchQuery))
+    : clients;
+
+  if (clients.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">No clients yet. Add your first one to start tracking progress.</div>`;
+    return;
+  }
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">No clients match "${escapeHtml(searchQuery)}".</div>`;
+    return;
+  }
+  listEl.innerHTML = filtered.map(c => {
+    const last = latestCheckin(c);
+    const growth = reviewGrowth(c);
+    const paymentBadge = last ? `<span class="badge ${last.payment}">${last.payment}</span>` : `<span class="badge due">no check-in yet</span>`;
+    const overdueBadge = isOverdueForCheckin(c) ? `<span class="badge overdue">check-in overdue</span>` : '';
+    return `
+      <div class="client-card ${c.id === selectedClientId ? 'selected' : ''}" onclick="showDetail('${c.id}')">
+        <div class="client-head">
+          <div>
+            <div class="client-name">${escapeHtml(c.name)}</div>
+            <div class="client-meta">${escapeHtml(c.type)} &middot; onboarded ${formatDate(c.onboardDate)}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            ${overdueBadge}
+            ${paymentBadge}
+            <button class="btn secondary small" onclick="openEditClientModal('${c.id}', event)">Edit</button>
+            <button class="btn danger small" onclick="deleteClient('${c.id}', event)">Remove</button>
+          </div>
+        </div>
+        <div class="client-stats">
+          <div class="stat">Reviews: <b>${currentReviews(c)}</b> (${growth >= 0 ? '+' : ''}${growth} since start)</div>
+          <div class="stat">Taps/scans: <b>${totalTaps(c)}</b> total</div>
+          <div class="stat">$${c.monthlyRate}/mo</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function showDetail(clientId) {
+  selectedClientId = clientId;
+  renderClientList();
+  const client = clients.find(c => c.id === clientId);
+  if (!client) return;
+
+  const panel = document.getElementById('detailPanel');
+  panel.innerHTML = `
+    <div class="detail-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="font-family:Georgia,serif;">${escapeHtml(client.name)}</h2>
+        <button class="btn" onclick="openCheckinModal('${client.id}')">+ Log check-in</button>
+      </div>
+      <p style="color:var(--muted); font-size:13px; margin-top:4px;">
+        Started with ${client.baselineReviews} reviews on ${formatDate(client.onboardDate)}
+        ${client.slug ? ' &middot; brixly.s.gy/' + escapeHtml(client.slug) : ''}
+      </p>
+      <div class="chart-wrap">
+        <canvas id="growthChart" role="img" aria-label="Line chart showing review count growth over time for ${escapeHtml(client.name)}"></canvas>
+      </div>
+      <h3 style="font-size:14px; margin-top:20px; margin-bottom:8px; color:var(--muted);">Check-in history</h3>
+      <div id="checkinHistory">
+        ${client.checkins.length === 0 ? '<p style="color:var(--muted); font-size:13px;">No check-ins logged yet.</p>' :
+          [...client.checkins].reverse().map(ci => `
+            <div class="log-row">
+              <span>${formatDate(ci.date)} ${ci.notes ? '&mdash; ' + escapeHtml(ci.notes) : ''}</span>
+              <span>${ci.reviews} reviews &middot; ${ci.taps} taps &middot; <span class="badge ${ci.payment}">${ci.payment}</span></span>
+            </div>
+          `).join('')
+        }
+      </div>
+    </div>
   `;
 
-  document.getElementById('lrInsight').innerHTML = `💡 <strong>Analysis:</strong> ${biz.insight}`;
-
-  const mapsBtn = document.getElementById('lrMapsBtn');
-  if (mapsBtn) mapsBtn.onclick = () => openMaps(encodeURIComponent(biz.name + ' ' + biz.address));
+  renderChart(client);
 }
 
+function renderChart(client) {
+  const ctx = document.getElementById('growthChart');
+  if (!ctx) return;
+  if (chartInstance) chartInstance.destroy();
+
+  const labels = ['Start', ...client.checkins.map(ci => formatDate(ci.date))];
+  const data = [client.baselineReviews, ...client.checkins.map(ci => ci.reviews)];
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Review count',
+        data: data,
+        borderColor: '#d4a843',
+        backgroundColor: 'rgba(212,168,67,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: '#d4a843',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#888888' }, grid: { color: '#222222' } },
+        y: { ticks: { color: '#888888' }, grid: { color: '#222222' }, beginAtZero: false }
+      }
+    }
+  });
+}
+
+function renderMrrChart() {
+  const ctx = document.getElementById('mrrChart');
+  if (!ctx) return;
+  if (mrrChartInstance) mrrChartInstance.destroy();
+
+  if (clients.length === 0) return;
+
+  const dated = clients
+    .filter(c => c.onboardDate)
+    .map(c => ({ date: c.onboardDate, rate: c.monthlyRate || 0 }))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  if (dated.length === 0) return;
+
+  // Build cumulative MRR at each month from first onboarding to current month
+  const start = new Date(dated[0].date + 'T00:00:00');
+  const now = new Date();
+  const months = [];
+  let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth(), 1);
+  while (cursor <= end) {
+    months.push(new Date(cursor));
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+  }
+
+  const labels = months.map(m => m.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
+  const data = months.map(m => {
+    const cutoff = new Date(m.getFullYear(), m.getMonth() + 1, 1);
+    return dated.filter(d => new Date(d.date + 'T00:00:00') < cutoff).reduce((sum, d) => sum + d.rate, 0);
+  });
+
+  mrrChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'MRR',
+        data: data,
+        borderColor: '#52b788',
+        backgroundColor: 'rgba(82,183,136,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: '#52b788',
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => '$' + ctx.parsed.y } }
+      },
+      scales: {
+        x: { ticks: { color: '#888888' }, grid: { color: '#222222' } },
+        y: { ticks: { color: '#888888', callback: (v) => '$' + v }, grid: { color: '#222222' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function render() {
+  renderStats();
+  renderClientList();
+  renderMrrChart();
+}
+
+loadData();
 </script>
 </body>
 </html>
