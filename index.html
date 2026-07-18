@@ -272,6 +272,38 @@
   .priority-badge.warm { background: rgba(212,168,67,0.15); color: var(--gold); }
   .priority-badge.cold { background: rgba(120,120,120,0.15); color: var(--muted); }
 
+  .seen-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .area-log-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+  }
+  .area-log-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .area-log-title { font-size: 15px; font-weight: 700; }
+  .area-log-meta { font-size: 12px; color: var(--muted); }
+  .area-log-cats { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
   .card-metrics {
     display: flex;
     gap: 16px;
@@ -632,6 +664,7 @@
   </div>
   <div class="nav-tabs">
     <div class="nav-tab active" data-view="prospectorView" onclick="switchView('prospectorView', this)">🔍 Prospector</div>
+    <div class="nav-tab" data-view="areasView" onclick="switchView('areasView', this)">🗺️ Areas</div>
     <div class="nav-tab" data-view="historyView" onclick="switchView('historyView', this)">📜 History</div>
     <div class="nav-tab" data-view="savedView" onclick="switchView('savedView', this)">⭐ Saved</div>
   </div>
@@ -788,6 +821,21 @@
       <div>Brixly will surface the best local businesses to approach — ranked by review opportunity. Or add one manually if you already found it in the field.</div>
     </div>
 
+  </div>
+
+  <!-- ===================== AREAS VIEW ===================== -->
+  <div class="view" id="areasView">
+    <div class="history-header">
+      <div class="history-title">Areas Covered</div>
+      <button class="clear-history-btn" onclick="clearAreasLog()">Clear Log</button>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Every search you've run, so you know what's already been scanned before you search it again.</div>
+    <div id="areasContainer"></div>
+    <div class="empty-state hidden" id="areasEmptyState">
+      <div class="empty-icon">🗺️</div>
+      <div class="empty-title">No areas searched yet</div>
+      <div>Run a search in the Prospector tab and it'll be logged here.</div>
+    </div>
   </div>
 
   <!-- ===================== SAVED VIEW ===================== -->
@@ -957,6 +1005,83 @@ let currentPitch = '';
 
 
 const HISTORY_KEY = 'brixly_history_log';
+const AREAS_KEY = 'brixly_areas_log';
+const SEEN_KEY = 'brixly_seen_places';
+
+// ---------- AREAS SEARCHED ----------
+function getAreasLog() { try { return JSON.parse(localStorage.getItem(AREAS_KEY) || '[]'); } catch { return []; } }
+function saveAreasLog(list) { localStorage.setItem(AREAS_KEY, JSON.stringify(list)); }
+
+function recordAreaSearch(zip, radiusMiles, categories, resultCount) {
+  const log = getAreasLog();
+  log.unshift({
+    zip, radiusMiles, categories: [...categories],
+    timestamp: new Date().toISOString(),
+    resultCount
+  });
+  saveAreasLog(log);
+}
+
+function findPriorAreaSearch(zip, radiusMiles, categories) {
+  const log = getAreasLog();
+  const catsSorted = [...categories].sort().join(',');
+  return log.find(a => a.zip === zip && String(a.radiusMiles) === String(radiusMiles) && [...a.categories].sort().join(',') === catsSorted);
+}
+
+function clearAreasLog() {
+  if (!confirm('Clear your areas-searched log? This cannot be undone.')) return;
+  saveAreasLog([]);
+  renderAreasLog();
+}
+
+function renderAreasLog() {
+  const log = getAreasLog();
+  const container = document.getElementById('areasContainer');
+  const empty = document.getElementById('areasEmptyState');
+  container.innerHTML = '';
+  if (log.length === 0) { empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  log.forEach(a => {
+    const d = new Date(a.timestamp);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const catNames = a.categories.map(c => catLabels[c] || c).join(', ');
+    const item = document.createElement('div');
+    item.className = 'area-log-item';
+    item.innerHTML = `
+      <div class="area-log-top">
+        <div class="area-log-title">${a.zip} · ${a.radiusMiles} mi radius</div>
+        <div class="area-log-meta">${dateStr}</div>
+      </div>
+      <div class="area-log-cats">${catNames} — <strong style="color:var(--ink)">${a.resultCount}</strong> businesses found</div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+// ---------- SEEN PLACES (dedupe across searches) ----------
+function getSeenPlaces() { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch { return {}; } }
+function saveSeenPlaces(obj) { localStorage.setItem(SEEN_KEY, JSON.stringify(obj)); }
+
+// Checks whether a place was already seen in a PRIOR search, records this occurrence,
+// and returns { seenBefore, timesSeen, lastSeen } describing its status BEFORE this call.
+function markPlaceSeen(placeId, name) {
+  if (!placeId) return { seenBefore: false, timesSeen: 0, lastSeen: null };
+  const seen = getSeenPlaces();
+  const existing = seen[placeId];
+  const result = existing
+    ? { seenBefore: true, timesSeen: existing.timesSeen, lastSeen: existing.lastSeen }
+    : { seenBefore: false, timesSeen: 0, lastSeen: null };
+
+  seen[placeId] = {
+    name,
+    firstSeen: existing ? existing.firstSeen : new Date().toISOString(),
+    lastSeen: new Date().toISOString(),
+    timesSeen: (existing ? existing.timesSeen : 0) + 1
+  };
+  saveSeenPlaces(seen);
+  return result;
+}
 
 // ---------- NAV ----------
 function switchView(viewId, el) {
@@ -967,6 +1092,7 @@ function switchView(viewId, el) {
   el.classList.add('active');
   if (viewId === 'historyView') renderHistory();
   if (viewId === 'savedView') renderSaved();
+  if (viewId === 'areasView') renderAreasLog();
 }
 
 // Category chips
@@ -1013,11 +1139,10 @@ async function runSearch() {
   document.getElementById('emptyState').classList.add('hidden');
 
   const steps = [
-    'Scanning Google Maps data...',
-    'Analyzing review counts and ratings...',
-    'Identifying low-review businesses...',
-    'Ranking by opportunity score...',
-    'Generating pitch insights...'
+    'Geocoding your ZIP code...',
+    'Searching Google for real businesses...',
+    'Scoring by review opportunity...',
+    'Writing tailored pitch insights...'
   ];
   let stepIdx = 0;
   const stepInterval = setInterval(() => {
@@ -1027,63 +1152,98 @@ async function runSearch() {
   }, 800);
 
   try {
-    const lang = document.getElementById('langInput').value;
     const radius = document.getElementById('radiusInput').value;
-    const cats = selectedCategories.map(c => catLabels[c]).join(', ');
 
-    const prompt = `You are a local business intelligence tool for Brixly, a San José CA company that sells Google review management packages to local businesses.
+    // Warn (non-blocking) if this exact area+radius+category combo was already searched
+    const prior = findPriorAreaSearch(zip, radius, selectedCategories);
 
-Generate a realistic list of 12 local businesses near ZIP code ${zip} in the San José, CA area (${radius} mile radius) that would be ideal prospects for Brixly's Google review management service.
+    // Step 1: real businesses from Google, via Nearby Search
+    const placesRes = await fetch('/.netlify/functions/places', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'nearby', zip, radiusMiles: radius, categories: selectedCategories })
+    });
+    const placesData = await placesRes.json();
+    if (placesData.error) throw new Error(placesData.error);
 
-Business types to include: ${cats}
-${lang === 'es' ? 'Focus on Spanish-speaking owned businesses.' : lang === 'both' ? 'Include a mix of English and Spanish-speaking owned businesses.' : 'Focus on English-speaking businesses.'}
+    let realBusinesses = placesData.results || [];
 
-For each business, create realistic data. Return ONLY a JSON array, no other text:
+    if (realBusinesses.length === 0) {
+      clearInterval(stepInterval);
+      document.getElementById('loadingState').classList.remove('show');
+      document.getElementById('emptyState').classList.remove('hidden');
+      document.getElementById('emptyState').innerHTML = `
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No businesses found nearby</div>
+        <div>Try a bigger radius, or different business types for ${zip}.</div>
+      `;
+      btn.disabled = false;
+      btn.innerHTML = '<span>🔍</span> Find Target Businesses';
+      return;
+    }
+
+    // Step 2: score priority from REAL numbers (never invented)
+    realBusinesses = realBusinesses.map(b => {
+      const { priority, score } = calcPriority(b.rating, b.reviewCount);
+      return { ...b, priority, priorityScore: score };
+    });
+
+    // Step 3: mark each place against the seen-before store (cross-search dedupe)
+    realBusinesses = realBusinesses.map(b => {
+      const seenInfo = markPlaceSeen(b.placeId, b.name);
+      return { ...b, _seenBefore: seenInfo.seenBefore, _timesSeen: seenInfo.timesSeen, _lastSeen: seenInfo.lastSeen };
+    });
+
+    // Step 4: one batched Claude call to write insight + walk-in time per REAL business
+    const batchPrompt = `You are a Brixly sales analyst. Brixly sells Google review management to local businesses (custom NFC review badges + Google Business Profile help).
+
+Here is a list of REAL businesses pulled from Google Places. For EACH one, write a short, sharp insight (2 sentences max, referencing their actual rating/review numbers) explaining why they are or aren't a good Brixly prospect, plus a plausible "best time to walk in" for that business type.
+
+Businesses:
+${realBusinesses.map((b, i) => `${i}. ${b.name} (${b.type}) — ${b.rating}★, ${b.reviewCount} reviews, priority: ${b.priority}`).join('\n')}
+
+Return ONLY a JSON array, same order as above, no other text:
 [
-  {
-    "name": "Business Name",
-    "type": "Restaurant",
-    "address": "1234 Street Name, San José, CA ${zip}",
-    "phone": "408-555-XXXX",
-    "rating": 3.8,
-    "reviewCount": 23,
-    "monthsOnGoogle": 18,
-    "spanishOwned": false,
-    "priorityScore": 95,
-    "priority": "hot",
-    "insight": "Only 23 reviews in 18 months despite being busy. Rating below 4.0 means they're invisible in local search. A review stand at the register would collect reviews passively.",
-    "opportunity": "Low review count + sub-4.0 rating = highest opportunity",
-    "walkInTime": "Tuesday-Thursday 2-4pm (slow period)"
-  }
-]
+  { "insight": "...", "walkInTime": "..." }
+]`;
 
-Priority scoring rules:
-- "hot" (score 80-100): Under 50 reviews OR rating under 4.0 — urgent need
-- "warm" (score 50-79): 50-150 reviews AND rating 4.0-4.3 — good opportunity  
-- "cold" (score 20-49): 150+ reviews AND rating above 4.3 — lower priority
-
-Make the data feel realistic for San José's actual business landscape. Include some Spanish business names. Make the insights sharp and specific — reference the actual numbers in the insight.`;
-
-    const response = await fetch('/.netlify/functions/claude', {
+    const aiRes = await fetch('/.netlify/functions/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 4000,
-        messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content: batchPrompt }]
       })
     });
+    const aiData = await aiRes.json();
+    if (aiData.error) throw new Error(aiData.error.message || JSON.stringify(aiData.error));
+    const aiText = aiData.content[0].text;
+    const jsonMatch = aiText.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    const cleanAi = jsonMatch ? jsonMatch[0] : aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+    let insights = [];
+    try { insights = JSON.parse(cleanAi); } catch (e) { insights = []; }
 
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    const text = data.content[0].text;
-    // Extract JSON array from response, handling markdown fences
-    const jsonMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
-    const clean = jsonMatch ? jsonMatch[0] : text.replace(/```json/g, '').replace(/```/g, '').trim();
-    businesses = JSON.parse(clean);
+    businesses = realBusinesses.map((b, i) => ({
+      ...b,
+      insight: (insights[i] && insights[i].insight) || `${b.reviewCount} reviews on Google with a ${b.rating}★ rating.`,
+      walkInTime: (insights[i] && insights[i].walkInTime) || null
+    }));
+
+    // Step 5: log this search so it shows up in the Areas tab
+    recordAreaSearch(zip, radius, selectedCategories, businesses.length);
 
     clearInterval(stepInterval);
     renderResults();
+
+    if (prior) {
+      const d = new Date(prior.timestamp);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--gold);';
+      banner.textContent = `⚠️ You already searched ${zip} · ${radius}mi with these same categories on ${dateStr} (${prior.resultCount} results). Check the Areas tab to review it.`;
+      document.getElementById('resultsContainer').prepend(banner);
+    }
 
   } catch (err) {
     clearInterval(stepInterval);
@@ -1144,6 +1304,7 @@ function renderCards(list) {
           ${biz.priority === 'hot' ? '🔥 Hot' : biz.priority === 'warm' ? '⚡ Warm' : '❄️ Cold'}
         </div>
       </div>
+      ${biz._seenBefore ? `<div class="seen-badge">👁 Seen before — ${biz._timesSeen}x, last ${new Date(biz._lastSeen).toLocaleDateString('en-US', {month:'short', day:'numeric'})}</div>` : ''}
       <div class="card-metrics">
         <div class="metric"><span class="stars">${stars}</span> <strong>${biz.rating}</strong> stars</div>
         <div class="metric">📝 <strong>${biz.reviewCount}</strong> reviews</div>
@@ -1339,6 +1500,7 @@ function recordHistory(biz, status) {
     name: biz.name,
     type: biz.type,
     address: biz.address,
+    placeId: biz.placeId || null,
     status: status,
     date: new Date().toISOString()
   });
