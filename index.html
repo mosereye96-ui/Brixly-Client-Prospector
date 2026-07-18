@@ -1188,6 +1188,12 @@ async function runSearch() {
       return { ...b, priority, priorityScore: score };
     });
 
+    // Cap to the top 15 by opportunity score — with multiple categories selected,
+    // Nearby Search can return 40-60+ real results, which is too much for one
+    // Claude call and risks a timeout. Keep it to the best prospects.
+    realBusinesses.sort((a, b) => b.priorityScore - a.priorityScore);
+    realBusinesses = realBusinesses.slice(0, 15);
+
     // Step 3: mark each place against the seen-before store (cross-search dedupe)
     realBusinesses = realBusinesses.map(b => {
       const seenInfo = markPlaceSeen(b.placeId, b.name);
@@ -1211,7 +1217,7 @@ Return ONLY a JSON array, same order as above, no other text:
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 4000,
         messages: [{ role: 'user', content: batchPrompt }]
       })
