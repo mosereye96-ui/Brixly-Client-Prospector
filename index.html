@@ -304,6 +304,47 @@
   .area-log-meta { font-size: 12px; color: var(--muted); }
   .area-log-cats { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
+  .appt-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .appt-item.today { border-left: 3px solid var(--accent); background: rgba(193,80,46,0.06); }
+  .appt-item.past { opacity: 0.5; }
+  .appt-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .appt-meta { font-size: 12px; color: var(--muted); }
+  .appt-notes { font-size: 12px; color: var(--muted); margin-top: 4px; font-style: italic; }
+  .appt-when {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .appt-when.today-label { color: var(--accent); }
+  .appt-actions { display: flex; gap: 8px; }
+  .next-appt-banner {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .next-appt-banner .label { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 3px; }
+  .next-appt-banner .name { font-size: 15px; font-weight: 700; }
+
   .card-metrics {
     display: flex;
     gap: 16px;
@@ -665,6 +706,7 @@
   <div class="nav-tabs">
     <div class="nav-tab active" data-view="prospectorView" onclick="switchView('prospectorView', this)">🔍 Prospector</div>
     <div class="nav-tab" data-view="areasView" onclick="switchView('areasView', this)">🗺️ Areas</div>
+    <div class="nav-tab" data-view="appointmentsView" onclick="switchView('appointmentsView', this)">📅 Appointments</div>
     <div class="nav-tab" data-view="historyView" onclick="switchView('historyView', this)">📜 History</div>
     <div class="nav-tab" data-view="savedView" onclick="switchView('savedView', this)">⭐ Saved</div>
   </div>
@@ -675,6 +717,8 @@
 
   <!-- ===================== PROSPECTOR VIEW ===================== -->
   <div class="view active" id="prospectorView">
+
+    <div id="nextApptBanner"></div>
 
     <!-- LOOKUP PANEL -->
     <div class="lookup-panel">
@@ -709,6 +753,7 @@
           <button class="action-btn btn-pitch" onclick="lookupGetPitch()">📋 Get Pitch Script</button>
           <button class="action-btn btn-maps" id="lrMapsBtn">🗺️ Maps</button>
           <button class="action-btn btn-fav" id="lrFavBtn" onclick="lookupToggleFav()">☆ Save</button>
+          <button class="action-btn btn-fav" onclick="openAppointmentModal(lookupBizData)">📅 Set Appointment</button>
           <button class="action-btn btn-done" onclick="lookupMarkClosed()">✅ Mark Closed</button>
           <button class="action-btn btn-skip" onclick="lookupMarkSkipped()">⏭ Skip</button>
         </div>
@@ -838,6 +883,21 @@
     </div>
   </div>
 
+  <!-- ===================== APPOINTMENTS VIEW ===================== -->
+  <div class="view" id="appointmentsView">
+    <div class="history-header">
+      <div class="history-title">Appointments</div>
+      <button class="add-btn" onclick="openAppointmentModal()">➕ New Appointment</button>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Who you're meeting, and when — set from any business card, or add one manually.</div>
+    <div id="appointmentsContainer"></div>
+    <div class="empty-state hidden" id="appointmentsEmptyState">
+      <div class="empty-icon">📅</div>
+      <div class="empty-title">No appointments yet</div>
+      <div>Hit 📅 Set Appointment on any business card, or add one manually above.</div>
+    </div>
+  </div>
+
   <!-- ===================== SAVED VIEW ===================== -->
   <div class="view" id="savedView">
     <div class="history-header">
@@ -877,6 +937,48 @@
     <div class="modal-actions">
       <button class="modal-close" onclick="closePitch()">Close</button>
       <button class="modal-copy" onclick="copyPitch()">Copy Script</button>
+    </div>
+  </div>
+</div>
+
+<!-- APPOINTMENT MODAL -->
+<div class="modal-overlay" id="appointmentModal">
+  <div class="modal">
+    <div class="modal-title">Set Appointment</div>
+    <div class="modal-sub" id="apptModalSub">Who you're meeting, and when.</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Business / Person *</label>
+        <input type="text" id="apptName" placeholder="El Mariachi Taqueria">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date *</label>
+        <input type="date" id="apptDate">
+      </div>
+      <div class="form-group">
+        <label>Time</label>
+        <input type="time" id="apptTime">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" id="apptAddress" placeholder="1234 Stevens Creek Blvd, San José, CA">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" id="apptNotes" placeholder="Bring pitch deck, ask for the owner...">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-close" onclick="closeAppointmentModal()">Cancel</button>
+      <button class="modal-submit" onclick="submitAppointment()">Save Appointment</button>
     </div>
   </div>
 </div>
@@ -1083,6 +1185,140 @@ function markPlaceSeen(placeId, name) {
   return result;
 }
 
+// ---------- APPOINTMENTS ----------
+const APPOINTMENTS_KEY = 'brixly_appointments';
+let apptPrefill = null;
+
+function getAppointments() { try { return JSON.parse(localStorage.getItem(APPOINTMENTS_KEY) || '[]'); } catch { return []; } }
+function saveAppointments(list) { localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(list)); }
+
+function openAppointmentModal(prefill) {
+  apptPrefill = prefill || null;
+  document.getElementById('apptName').value = prefill ? prefill.name : '';
+  document.getElementById('apptAddress').value = prefill ? (prefill.address || '') : '';
+  document.getElementById('apptDate').value = '';
+  document.getElementById('apptTime').value = '';
+  document.getElementById('apptNotes').value = '';
+  document.getElementById('apptModalSub').textContent = prefill
+    ? `Scheduling with ${prefill.name}.`
+    : "Who you're meeting, and when.";
+  document.getElementById('appointmentModal').classList.add('open');
+}
+
+function closeAppointmentModal() {
+  document.getElementById('appointmentModal').classList.remove('open');
+  apptPrefill = null;
+}
+
+function submitAppointment() {
+  const name = document.getElementById('apptName').value.trim();
+  const date = document.getElementById('apptDate').value;
+  if (!name) { alert('Business or person name is required'); return; }
+  if (!date) { alert('Pick a date'); return; }
+
+  const time = document.getElementById('apptTime').value;
+  const address = document.getElementById('apptAddress').value.trim();
+  const notes = document.getElementById('apptNotes').value.trim();
+
+  const appts = getAppointments();
+  appts.push({
+    id: Date.now().toString(36),
+    name, date, time, address, notes,
+    placeId: apptPrefill ? (apptPrefill.placeId || null) : null,
+    done: false,
+    createdAt: new Date().toISOString()
+  });
+  saveAppointments(appts);
+  closeAppointmentModal();
+  renderAppointments();
+  renderNextApptBanner();
+}
+
+function markApptDone(id) {
+  const appts = getAppointments();
+  const appt = appts.find(a => a.id === id);
+  if (appt) appt.done = !appt.done;
+  saveAppointments(appts);
+  renderAppointments();
+  renderNextApptBanner();
+}
+
+function deleteAppt(id) {
+  if (!confirm('Delete this appointment?')) return;
+  saveAppointments(getAppointments().filter(a => a.id !== id));
+  renderAppointments();
+  renderNextApptBanner();
+}
+
+function apptDateTime(appt) {
+  return new Date(appt.date + 'T' + (appt.time || '00:00'));
+}
+
+function formatApptWhen(appt) {
+  const d = apptDateTime(appt);
+  const today = new Date();
+  const isToday = d.toDateString() === today.toDateString();
+  const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const timeStr = appt.time ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
+  return { isToday, label: (isToday ? 'Today' : dateStr) + (timeStr ? ' · ' + timeStr : ''), sortValue: d.getTime() };
+}
+
+function renderAppointments() {
+  const appts = getAppointments();
+  const container = document.getElementById('appointmentsContainer');
+  const empty = document.getElementById('appointmentsEmptyState');
+  container.innerHTML = '';
+
+  if (appts.length === 0) { empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  const sorted = [...appts].sort((a, b) => apptDateTime(a) - apptDateTime(b));
+
+  sorted.forEach(appt => {
+    const when = formatApptWhen(appt);
+    const isPast = apptDateTime(appt) < new Date(new Date().setHours(0,0,0,0)) && !when.isToday;
+    const item = document.createElement('div');
+    item.className = 'appt-item' + (when.isToday ? ' today' : '') + (appt.done || isPast ? ' past' : '');
+    item.innerHTML = `
+      <div>
+        <div class="appt-name">${appt.name}${appt.done ? ' ✅' : ''}</div>
+        <div class="appt-meta">${appt.address || 'No address'}</div>
+        ${appt.notes ? `<div class="appt-notes">"${appt.notes}"</div>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="appt-when ${when.isToday ? 'today-label' : ''}">${when.label}</div>
+        <div class="appt-actions">
+          <button class="action-btn btn-done" onclick="markApptDone('${appt.id}')">${appt.done ? 'Undo' : '✅ Done'}</button>
+          <button class="action-btn btn-skip" onclick="deleteAppt('${appt.id}')">Delete</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function renderNextApptBanner() {
+  const banner = document.getElementById('nextApptBanner');
+  if (!banner) return;
+  const upcoming = getAppointments()
+    .filter(a => !a.done && apptDateTime(a) >= new Date(new Date().setHours(0,0,0,0)))
+    .sort((a, b) => apptDateTime(a) - apptDateTime(b));
+
+  if (upcoming.length === 0) { banner.innerHTML = ''; return; }
+  const next = upcoming[0];
+  const when = formatApptWhen(next);
+  banner.innerHTML = `
+    <div class="next-appt-banner">
+      <div>
+        <div class="label">${when.isToday ? "Today's next appointment" : 'Next appointment'}</div>
+        <div class="name">${next.name} — ${when.label}${next.address ? ' · ' + next.address : ''}</div>
+      </div>
+      <button class="action-btn btn-maps" onclick="switchView('appointmentsView', document.querySelector('.nav-tab[data-view=appointmentsView]'))">View all</button>
+    </div>
+  `;
+}
+
+
 // ---------- NAV ----------
 function switchView(viewId, el) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1093,6 +1329,7 @@ function switchView(viewId, el) {
   if (viewId === 'historyView') renderHistory();
   if (viewId === 'savedView') renderSaved();
   if (viewId === 'areasView') renderAreasLog();
+  if (viewId === 'appointmentsView') renderAppointments();
 }
 
 // Category chips
@@ -1326,6 +1563,7 @@ function renderCards(list) {
         <button class="action-btn btn-maps" onclick="openMaps('${encodeURIComponent(biz.name + ' ' + biz.address)}')">🗺️ Maps</button>
         ${biz.phone ? `<button class="action-btn btn-call" onclick="callBiz('${biz.phone}')">📞 Call</button>` : ''}
         <button class="action-btn btn-fav ${isFaved ? 'starred' : ''}" onclick="toggleFav(${idx})" id="fav-${idx}">${isFaved ? '⭐ Saved' : '☆ Save'}</button>
+        <button class="action-btn btn-fav" onclick="openAppointmentModal(businesses[${idx}])">📅 Set Appointment</button>
         <button class="action-btn btn-done" onclick="markStatus(${idx}, 'closed')">✅ Closed</button>
         <button class="action-btn btn-skip" onclick="markStatus(${idx}, 'skipped')">⏭ Skip</button>
       </div>
@@ -1762,6 +2000,9 @@ function renderLookupResult(biz) {
   const mapsBtn = document.getElementById('lrMapsBtn');
   if (mapsBtn) mapsBtn.onclick = () => openMaps(encodeURIComponent(biz.name + ' ' + biz.address));
 }
+
+// ---------- INIT ----------
+renderNextApptBanner();
 
 </script>
 </body>
