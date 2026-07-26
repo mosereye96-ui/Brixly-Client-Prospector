@@ -386,6 +386,39 @@
   .btn-call { background: var(--surface2); color: var(--green); border: 1px solid var(--border2); }
   .btn-done { background: rgba(82,183,136,0.15); color: var(--green); border: 1px solid rgba(82,183,136,0.25); }
   .btn-skip { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); }
+  .btn-notes { background: var(--surface2); color: var(--ink); border: 1px solid var(--border2); }
+  .btn-notes.has-note { background: rgba(193,80,46,0.12); color: var(--accent); border: 1px solid rgba(193,80,46,0.3); }
+  .btn-notes-save { background: var(--accent); color: white; }
+
+  .notes-wrap {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border2);
+  }
+  .notes-wrap.open { display: block; }
+  .notes-textarea {
+    width: 100%;
+    min-height: 70px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--ink);
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  .notes-textarea:focus { outline: none; border-color: var(--accent); }
+  .notes-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .notes-status { font-size: 12px; color: var(--green); font-weight: 600; }
 
   /* MODAL (shared: pitch + add business) */
   .modal-overlay {
@@ -1187,6 +1220,39 @@ function markPlaceSeen(placeId, name) {
 
 // ---------- APPOINTMENTS ----------
 const APPOINTMENTS_KEY = 'brixly_appointments';
+const NOTES_KEY = 'brixly_notes';
+
+function getNotes() { try { return JSON.parse(localStorage.getItem(NOTES_KEY) || '{}'); } catch { return {}; } }
+function saveNotesObj(obj) { localStorage.setItem(NOTES_KEY, JSON.stringify(obj)); }
+function noteKeyFor(biz) { return `${biz.name}|${biz.address}`; }
+
+function toggleNotes(idx) {
+  const wrap = document.getElementById(`notes-${idx}`);
+  if (!wrap) return;
+  wrap.classList.toggle('open');
+  if (wrap.classList.contains('open')) {
+    const textarea = wrap.querySelector('textarea');
+    if (textarea) textarea.focus();
+  }
+}
+
+function saveNote(idx) {
+  const biz = businesses[idx];
+  const textarea = document.getElementById(`notes-textarea-${idx}`);
+  if (!biz || !textarea) return;
+  const notes = getNotes();
+  const key = noteKeyFor(biz);
+  const text = textarea.value.trim();
+  if (text) notes[key] = text; else delete notes[key];
+  saveNotesObj(notes);
+  const status = document.getElementById(`notes-status-${idx}`);
+  const noteBtn = document.getElementById(`notes-btn-${idx}`);
+  if (noteBtn) noteBtn.classList.toggle('has-note', !!text);
+  if (status) {
+    status.textContent = 'Saved ✓';
+    setTimeout(() => { if (status) status.textContent = ''; }, 1500);
+  }
+}
 let apptPrefill = null;
 
 function getAppointments() { try { return JSON.parse(localStorage.getItem(APPOINTMENTS_KEY) || '[]'); } catch { return []; } }
@@ -1532,6 +1598,8 @@ function renderCards(list) {
 
     const favs = getFavs();
     const isFaved = favs.some(f => f.name === biz.name);
+    const notesObj = getNotes();
+    const existingNote = notesObj[noteKeyFor(biz)] || '';
     const card = document.createElement('div');
     card.className = `business-card ${biz.priority}`;
     card.id = `card-${idx}`;
@@ -1564,8 +1632,16 @@ function renderCards(list) {
         ${biz.phone ? `<button class="action-btn btn-call" onclick="callBiz('${biz.phone}')">📞 Call</button>` : ''}
         <button class="action-btn btn-fav ${isFaved ? 'starred' : ''}" onclick="toggleFav(${idx})" id="fav-${idx}">${isFaved ? '⭐ Saved' : '☆ Save'}</button>
         <button class="action-btn btn-fav" onclick="openAppointmentModal(businesses[${idx}])">📅 Set Appointment</button>
+        <button class="action-btn btn-notes ${existingNote ? 'has-note' : ''}" id="notes-btn-${idx}" onclick="toggleNotes(${idx})">📝 Notes</button>
         <button class="action-btn btn-done" onclick="markStatus(${idx}, 'closed')">✅ Closed</button>
         <button class="action-btn btn-skip" onclick="markStatus(${idx}, 'skipped')">⏭ Skip</button>
+      </div>
+      <div class="notes-wrap" id="notes-${idx}">
+        <textarea class="notes-textarea" id="notes-textarea-${idx}" placeholder="Jot down notes about this business...">${existingNote}</textarea>
+        <div class="notes-footer">
+          <span class="notes-status" id="notes-status-${idx}"></span>
+          <button class="action-btn btn-notes-save" onclick="saveNote(${idx})">💾 Save Note</button>
+        </div>
       </div>
     `;
     container.appendChild(card);
