@@ -1843,21 +1843,63 @@ function renderSaved() {
     const item = document.createElement('div');
     item.className = `history-item`;
     item.style.borderLeft = `3px solid var(--gold)`;
+    item.style.display = 'block';
     const d = new Date(biz.savedAt);
     const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const notesObj = getNotes();
+    const existingNote = notesObj[noteKeyFor(biz)] || '';
     item.innerHTML = `
-      <div>
-        <div class="hist-name">${biz.name}</div>
-        <div class="hist-meta">${biz.type || ''} · ${biz.address || ''}</div>
-        <div class="hist-meta" style="margin-top:4px;">⭐ ${biz.rating || 0} · ${biz.reviewCount || 0} reviews · Score: ${biz.priorityScore || 0}/100</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div class="hist-name">${biz.name}</div>
+          <div class="hist-meta">${biz.type || ''} · ${biz.address || ''}</div>
+          <div class="hist-meta" style="margin-top:4px;">⭐ ${biz.rating || 0} · ${biz.reviewCount || 0} reviews · Score: ${biz.priorityScore || 0}/100</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="hist-date">${dateStr}</span>
+          <button class="action-btn btn-notes ${existingNote ? 'has-note' : ''}" id="saved-notes-btn-${i}" onclick="toggleSavedNotes(${i})">📝 Notes</button>
+          <button class="action-btn btn-skip" style="font-size:11px;padding:5px 10px;" onclick="removeFav(${i})">Remove</button>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="hist-date">${dateStr}</span>
-        <button class="action-btn btn-skip" style="font-size:11px;padding:5px 10px;" onclick="removeFav(${i})">Remove</button>
+      <div class="notes-wrap" id="saved-notes-${i}">
+        <textarea class="notes-textarea" id="saved-notes-textarea-${i}" placeholder="Jot down notes about this business...">${existingNote}</textarea>
+        <div class="notes-footer">
+          <span class="notes-status" id="saved-notes-status-${i}"></span>
+          <button class="action-btn btn-notes-save" onclick="saveSavedNote(${i})">💾 Save Note</button>
+        </div>
       </div>
     `;
     container.appendChild(item);
   });
+}
+
+function toggleSavedNotes(i) {
+  const wrap = document.getElementById(`saved-notes-${i}`);
+  if (!wrap) return;
+  wrap.classList.toggle('open');
+  if (wrap.classList.contains('open')) {
+    const textarea = wrap.querySelector('textarea');
+    if (textarea) textarea.focus();
+  }
+}
+
+function saveSavedNote(i) {
+  const favs = getFavs();
+  const biz = favs[i];
+  const textarea = document.getElementById(`saved-notes-textarea-${i}`);
+  if (!biz || !textarea) return;
+  const notes = getNotes();
+  const key = noteKeyFor(biz);
+  const text = textarea.value.trim();
+  if (text) notes[key] = text; else delete notes[key];
+  saveNotesObj(notes);
+  const status = document.getElementById(`saved-notes-status-${i}`);
+  const noteBtn = document.getElementById(`saved-notes-btn-${i}`);
+  if (noteBtn) noteBtn.classList.toggle('has-note', !!text);
+  if (status) {
+    status.textContent = 'Saved ✓';
+    setTimeout(() => { if (status) status.textContent = ''; }, 1500);
+  }
 }
 
 function removeFav(idx) {
